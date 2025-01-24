@@ -1,10 +1,12 @@
-using Meshes
-using CountriesBorders
-using CountriesBorders: borders
-using CoordRefSystems
-using Test
+@testsnippet InterfacesSetup begin
+    using Meshes
+    using CountriesBorders
+    using CountriesBorders: borders
+    using CoordRefSystems
+    using Test
+end
 
-@testset "Meshes interface" begin
+@testitem "Meshes interface" setup=[InterfacesSetup] begin
     italy = extract_countries("italy") |> only
     @test measure(italy) == measure(borders(LatLon, italy))
     @test nvertices(italy) == nvertices(borders(LatLon, italy))
@@ -18,4 +20,9 @@ using Test
     @test vertices(italy) == vertices(borders(Cartesian, italy))
     @test simplexify(italy) == simplexify(borders(Cartesian, italy))
     @test pointify(italy) == pointify(borders(Cartesian, italy))
+end
+
+@testitem "Longitude Wrapping" setup=[InterfacesSetup] begin
+    russia = extract_countries("russia")
+    @test all(!in(russia), [LatLon(lat, -100) for lat in -30:.01:75])
 end

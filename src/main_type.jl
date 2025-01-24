@@ -46,6 +46,7 @@ struct CountryBorder{T} <: Geometry{🌐,LATLON{T}}
     "The borders in Cartesian2D CRS"
     cart::MULTI_CART{T}
     function CountryBorder(admin::String, latlon::MULTI_LATLON{T}, valid_polyareas::BitVector; resolution::Int, table_idx::Int) where {T}
+        fix_lon_wrap!(latlon) # Fix singularities at the wrapping around 180° lon
         ngeoms = length(latlon.geoms)
         sum(valid_polyareas) === ngeoms || error("The number of set bits in the `valid_polyareas` vector must be equivalent to the number of PolyAreas in the `geom` input argument")
         cart = cartesian_geometry(latlon)
@@ -83,6 +84,38 @@ function remove_polyareas!(cb::CountryBorder, idxs)
     end
     return cb
 end
+
+# This function will cycle through all vertices of a ring and change points with
+# longitude ≈ 180° to -180° in case the rest of the points have mostly negative
+# longitude   
+function fix_lon_wrap!(ring::RING_LATLON{T}) where T
+    @static if pkgversion(CoordRefSystems) ≥ v"0.12.1"
+        return nothing # CoordRefSystems.jl v0.12.1 fixed the underlying issue so we do nothing
+    end
+    verts = vertices(ring)
+    get_lon(ll::LATLON) = ll.lon
+    get_lon(p::Point) = coords(p) |> get_lon
+    get_lon(v::AbstractVector{<:Point}) = Iterators.map(get_lon, v)
+    any(≈(180°), get_lon(verts)) || return # No points have longitude ≈ 180°
+    sum_lon = sum(lon -> lon ≈ 180° ? 0° : lon, get_lon(verts))
+    for i in eachindex(verts)
+        ll = coords(verts[i])
+        if get_lon(ll) ≈ 180°
+            lat = ll.lat
+            #=
+            Note: The line below works because the fully parametrized
+            constructor LatLon{Datum, Deg}(lat, lon) does not perform any
+            wrapping. This is an inner detail of CoordRefSystems.jl so it's not
+            very robust.
+            =#
+            new_ll = LATLON{T}(lat, sum_lon > 0 ? 180° : -180°)
+            verts[i] = Point(new_ll)
+        end
+    end
+    nothing
+end
+fix_lon_wrap!(g::Union{Multi, PolyArea}) = foreach(fix_lon_wrap!, rings(g))
+
 
 const GSET{T} = GeometrySet{🌐, LATLON{T}, CountryBorder{T}}
 const SUBDOMAIN{T} = SubDomain{🌐, LATLON{T}, <:GSET{T}}

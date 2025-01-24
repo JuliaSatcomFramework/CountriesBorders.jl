@@ -15,6 +15,6 @@ end
 
 @testitem "Basic" begin include("basics.jl") end
 @testitem "Extensions" begin include("extensions.jl") end
-@testitem "Meshes Interface" begin include("meshes_interface.jl") end
+# include("meshes_interface.jl")
 
 @run_package_tests verbose=true

@@ -8,6 +8,7 @@ module GeoTablesConversion
     using CoordRefSystems
     using CoordRefSystems: Deg, Met
     using Unitful
+    using Unitful: °
 
     export CountryBorder, DOMAIN, remove_polyareas!
 
