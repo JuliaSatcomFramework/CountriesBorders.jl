@@ -14,6 +14,7 @@ using CoordRefSystems
 using CoordRefSystems: Deg, Met
 
 export extract_countries, SKIP_NONCONTINENTAL_EU, SkipFromAdmin, SimpleLatLon, LatLon, Point
+export change_geometry, latlon_geometry, cartesian_geometry
 export CountryBorder
 
 include("conversions.jl")
