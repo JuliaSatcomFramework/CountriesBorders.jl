@@ -46,7 +46,6 @@ struct CountryBorder{T} <: Geometry{🌐,LATLON{T}}
     "The borders in Cartesian2D CRS"
     cart::MULTI_CART{T}
     function CountryBorder(admin::String, latlon::MULTI_LATLON{T}, valid_polyareas::BitVector; resolution::Int, table_idx::Int) where {T}
-        fix_lon_wrap!(latlon) # Fix singularities at the wrapping around 180° lon
         ngeoms = length(latlon.geoms)
         sum(valid_polyareas) === ngeoms || error("The number of set bits in the `valid_polyareas` vector must be equivalent to the number of PolyAreas in the `geom` input argument")
         cart = cartesian_geometry(latlon)
@@ -85,37 +84,6 @@ function remove_polyareas!(cb::CountryBorder, idxs)
     return cb
 end
 
-# This function will cycle through all vertices of a ring and change points with
-# longitude ≈ 180° to -180° in case the rest of the points have mostly negative
-# longitude   
-function fix_lon_wrap!(ring::RING_LATLON{T}) where T
-    @static if pkgversion(CoordRefSystems) ≥ v"0.12.1"
-        return nothing # CoordRefSystems.jl v0.12.1 fixed the underlying issue so we do nothing
-    end
-    verts = vertices(ring)
-    get_lon(ll::LATLON) = ll.lon
-    get_lon(p::Point) = coords(p) |> get_lon
-    get_lon(v::AbstractVector{<:Point}) = Iterators.map(get_lon, v)
-    any(≈(180°), get_lon(verts)) || return # No points have longitude ≈ 180°
-    sum_lon = sum(lon -> lon ≈ 180° ? 0° : lon, get_lon(verts))
-    for i in eachindex(verts)
-        ll = coords(verts[i])
-        if get_lon(ll) ≈ 180°
-            lat = ll.lat
-            #=
-            Note: The line below works because the fully parametrized
-            constructor LatLon{Datum, Deg}(lat, lon) does not perform any
-            wrapping. This is an inner detail of CoordRefSystems.jl so it's not
-            very robust.
-            =#
-            new_ll = LATLON{T}(lat, sum_lon > 0 ? 180° : -180°)
-            verts[i] = Point(new_ll)
-        end
-    end
-    nothing
-end
-fix_lon_wrap!(g::Union{Multi, PolyArea}) = foreach(fix_lon_wrap!, rings(g))
-
 
 const GSET{T} = GeometrySet{🌐, LATLON{T}, CountryBorder{T}}
 const SUBDOMAIN{T} = SubDomain{🌐, LATLON{T}, <:GSET{T}}
@@ -134,12 +102,13 @@ Convert geometries from LatLon to Cartesian coordinate systems.
 ## Returns
 - `PolyArea` or `Multi`: The converted geometry in Cartesian coordinate system.
 """
-function cartesian_geometry(poly::PolyArea{🌐,<:LATLON})
+function cartesian_geometry(poly::POLY_LATLON)
     map(rings(poly)) do r
         map(Meshes.flat, vertices(r)) |> Ring
     end |> splat(PolyArea)
 end
-cartesian_geometry(multi::Multi{🌐,<:LATLON}) = map(cartesian_geometry, parent(multi)) |> Multi
+cartesian_geometry(multi::MULTI_LATLON) = map(cartesian_geometry, parent(multi)) |> Multi
+cartesian_geometry(x::Union{MULTI_CART, POLY_CART}) = x
 
 """
     latlon_geometry(poly::PolyArea{𝔼{2},<:CART})
@@ -154,11 +123,35 @@ Convert geometries from Cartesian to LatLon coordinate systems.
 ## Returns
 - `PolyArea` or `Multi`: The converted geometry in LatLon coordinate system.
 """
-function latlon_geometry(poly::PolyArea{𝔼{2},<:CART})
+function latlon_geometry(poly::POLY_CART)
     map(rings(poly)) do r
         map(vertices(r)) do v
             LatLon{WGS84Latest}(coords(v).y |> ustrip, coords(v).x |> ustrip) |> Point
         end |> Ring
     end |> splat(PolyArea)
 end
-latlon_geometry(multi::Multi{𝔼{2},<:CART}) = map(latlon_geometry, parent(multi)) |> Multi
+latlon_geometry(multi::MULTI_CART) = map(latlon_geometry, parent(multi)) |> Multi
+latlon_geometry(x::Union{MULTI_LATLON, POLY_LATLON}) = x
+
+
+"""
+    change_geometry(crs::Type{Cartesian}, x)
+    change_geometry(crs::Type{LatLon}, x)
+    change_geometry(crs)
+
+Change the underlying CRS of a geometry (currently only PolyAreas or Multi) from
+storing Cartesian to LatLon points (or vice versa).
+
+The last method only taking `Cartesian` or `LatLon` as input simply returns a function that will apply the provided CRS to any geometry ised as input.
+
+## Examples
+```julia
+using CountriesBorders
+
+
+```
+"""
+change_geometry(::Type{Cartesian}, x) = cartesian_geometry(x)
+change_geometry(::Type{LatLon}, x) = latlon_geometry(x)
+
+change_geometry(crs::Union{Type{Cartesian}, Type{LatLon}}) = Base.Fix1(change_geometry, crs)

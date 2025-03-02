@@ -7,7 +7,7 @@ floattype(::DOMAIN{T}) where {T} = T
 
 borders(::Type{LatLon}, cb::CountryBorder) = cb.latlon
 borders(::Type{Cartesian}, cb::CountryBorder) = cb.cart
-borders(cb::CountryBorder) = borders(LatLon, cb)
+borders(x) = borders(LatLon, x)
 
 resolution(cb::CountryBorder) = cb.resolution
 resolution(d::DOMAIN) = resolution(element(d, 1))

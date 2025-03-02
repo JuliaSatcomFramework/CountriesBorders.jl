@@ -1,7 +1,7 @@
 name = "CountriesBorders"
 uuid = "ee40d4b5-31c3-4fe2-b6cc-5ac7adf7f414"
 authors = ["Alberto Mengali <disberd@gmail.com>"]
-version = "0.4.3"
+version = "0.4.4"
 
 [deps]
 Artifacts = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
@@ -29,10 +29,10 @@ CoordRefSystems = "0.13, 0.14, 0.15, 0.16"
 GeoInterface = "1"
 GeoJSON = "0.8"
 GeoTables = "1"
-Meshes = "0.50, 0.51, 0.52"
+Meshes = "0.50, 0.51, 0.52, 0.53"
 NaturalEarth = "0.1"
 PlotlyBase = "0.8"
 PrecompileTools = "1"
 Tables = "1"
 Unitful = "1"
-julia = "1.9"
+julia = "1.11"
