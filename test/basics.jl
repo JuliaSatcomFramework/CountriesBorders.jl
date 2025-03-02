@@ -145,11 +145,17 @@ end
 
     pa_latlon = PolyArea([Point(LatLon{WGS84Latest}(10°, -5°)), Point(LatLon{WGS84Latest}(10°, 15°)), Point(LatLon{WGS84Latest}(27°, 15°)), Point(LatLon{WGS84Latest}(27°, -5°))])
     pa_cartesian = PolyArea([Point{𝔼{2}}(Cartesian{WGS84Latest}(-5, 10)), Point{𝔼{2}}(Cartesian{WGS84Latest}(15, 10)), Point{𝔼{2}}(Cartesian{WGS84Latest}(15, 27)), Point{𝔼{2}}(Cartesian{WGS84Latest}(-5, 27))])
-        
+
+    multi_cartesian = Multi([pa_cartesian])
+    multi_latlon = Multi([pa_latlon])
+
     @test pa_latlon |> change_geometry(Cartesian) |> change_geometry(LatLon) == pa_latlon
     @test pa_latlon |> change_geometry(LatLon) == pa_latlon
     @test pa_cartesian |> change_geometry(LatLon) |> change_geometry(Cartesian) == pa_cartesian
     @test pa_cartesian |> change_geometry(LatLon) == pa_latlon
     @test pa_cartesian |> change_geometry(Cartesian) == pa_cartesian
     @test pa_latlon |> change_geometry(Cartesian) == pa_cartesian
+
+    @test multi_cartesian |> change_geometry(LatLon) == multi_latlon
+    @test multi_latlon |> change_geometry(Cartesian) == multi_cartesian
 end
