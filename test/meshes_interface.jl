@@ -26,3 +26,16 @@ end
     russia = extract_countries("russia")
     @test all(!in(russia), [LatLon(lat, -100) for lat in -30:.01:75])
 end
+
+@testitem "in_exit_early" setup=[InterfacesSetup] begin
+    using CountriesBorders: in_exit_early, Cartesian, borders, DOMAIN, to_cart_point
+    dmn = extract_countries("*")
+    # Add consistency checks with the standard `in` method not doing exit early
+    _in(p, cb::CountryBorder) = in(to_cart_point(p), borders(Cartesian, cb))
+    _in(p, dm::DOMAIN) = any(_in(p, e) for e in dm)
+
+    @test all(1:100) do _
+        p = rand(Point; crs = LatLon)
+        _in(p, dmn) == in(p, dmn)
+    end
+end

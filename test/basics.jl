@@ -7,7 +7,9 @@ using Test
 using Unitful
 
 @test to_cart_point(LatLon(0, 0)) isa POINT_CART{Float32}
-poly = rand(PolyArea; crs = LatLon) |> change_geometry(Cartesian)
+poly = map([(-1,-1), (-1, 1), (1, 1), (1, -1)]) do p 
+    LatLon(p...) |> Point
+end |> PolyArea |> change_geometry(Cartesian)
 @test in_exit_early(centroid(poly), poly, boundingbox(poly))
 
 
