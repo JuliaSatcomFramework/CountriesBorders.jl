@@ -1,5 +1,5 @@
 using CountriesBorders
-using CountriesBorders: possible_selector_values, valid_column_names, mergeSkipDict, validate_skipDict, skipall, SkipDict, skipDict, get_geotable, extract_plot_coords, borders, remove_polyareas!, floattype, npolyareas, to_cart_point, change_geometry, Cartesian, in_exit_early
+using CountriesBorders: possible_selector_values, valid_column_names, mergeSkipDict, validate_skipDict, skipall, SkipDict, skipDict, get_geotable, extract_plot_coords, borders, remove_polyareas!, floattype, to_cart_point, change_geometry, Cartesian, in_exit_early, polyareas
 using CountriesBorders.GeoTablesConversion: POINT_CART
 using Meshes
 using CoordRefSystems
@@ -10,7 +10,7 @@ using Unitful
 poly = map([(-1,-1), (-1, 1), (1, 1), (1, -1)]) do p 
     LatLon(p...) |> Point
 end |> PolyArea |> change_geometry(Cartesian)
-@test in_exit_early(centroid(poly), poly, boundingbox(poly))
+@test in_exit_early(LatLon(0,0), poly)
 
 
 example1 = extract_countries(;continent = "europe", admin="-russia")
@@ -133,6 +133,7 @@ end
 
 @testset "Misc coverage" begin
     italy = extract_countries("italy") |> only
+    npolyareas(x) = length(polyareas(x))
     @test LatLon(41.9, 12.49) in italy
     @test npolyareas(italy) == 3
     remove_polyareas!(italy, 1)

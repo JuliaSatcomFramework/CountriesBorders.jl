@@ -12,10 +12,15 @@ borders(x) = borders(LatLon, x)
 resolution(cb::CountryBorder) = cb.resolution
 resolution(d::DOMAIN) = resolution(element(d, 1))
 
-polyareas(crs::VALID_CRS, cb::CountryBorder) = parent(borders(crs, cb))
-polyareas(cb::CountryBorder) = polyareas(Cartesian, cb)
-npolyareas(cb::CountryBorder) = length(polyareas(cb))
+# This should return a vector of POLY_CART elements, mostly to be used with in_exit_early
+polyareas(x) = polyareas(borders(Cartesian, x))
+polyareas(v::Vector{<:POLY_CART}) = v
+polyareas(x::MULTI_CART) = parent(x)
+polyareas(x::POLY_CART) = [x]
 
+# This should return the cartesian bounding boxes for the polyareas of x, mostly to be used with in_exit_early
+bboxes(x) = map(boundingbox, polyareas(x))
+bboxes(cb::CountryBorder) = cb.bboxes
 
 # LatLon fallbacks
 Meshes.measure(cb::CountryBorder) = measure(borders(LatLon, cb))
@@ -81,10 +86,6 @@ Both `polys` and `bboxes` must be vectors of the same size, with element type `P
 
 This function is basically pre-filtering points by checking inclusion in the bounding box which is significantly faster than checking for the polyarea itself.
 """
-function in_exit_early(p, poly::POLY_CART{T}, bbox::BOX_CART{T}) where T 
-    p = to_cart_point(p, T)
-    return p in bbox && p in poly
-end
 function in_exit_early(p, polys::Vector{<:POLY_CART{T}}, bboxes::Vector{<:BOX_CART{T}}) where T
     p = to_cart_point(p, T)
     for i in eachindex(polys, bboxes)
@@ -93,6 +94,8 @@ function in_exit_early(p, polys::Vector{<:POLY_CART{T}}, bboxes::Vector{<:BOX_CA
     end
     return false
 end
+# This is a catchall method for extension for other types
+in_exit_early(p, x) = in_exit_early(p, polyareas(x), bboxes(x))
 
 to_cart_point(p::POINT_CART, T::Type{<:Real} = Float32) = convert(POINT_CART{T}, p)
 to_cart_point(p::POINT_LATLON, T::Type{<:Real} = Float32) = to_cart_point(Meshes.flat(p), T)
