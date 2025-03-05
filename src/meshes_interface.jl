@@ -81,6 +81,10 @@ Both `polys` and `bboxes` must be vectors of the same size, with element type `P
 
 This function is basically pre-filtering points by checking inclusion in the bounding box which is significantly faster than checking for the polyarea itself.
 """
+function in_exit_early(p, poly::POLY_CART{T}, bbox::BOX_CART{T}) where T 
+    p = to_cart_point(p, T)
+    return p in bbox && p in poly
+end
 function in_exit_early(p, polys::Vector{<:POLY_CART{T}}, bboxes::Vector{<:BOX_CART{T}}) where T
     p = to_cart_point(p, T)
     for i in eachindex(polys, bboxes)
