@@ -1,10 +1,12 @@
 using CountriesBorders
-using CountriesBorders: possible_selector_values, valid_column_names, mergeSkipDict, validate_skipDict, skipall, SkipDict, skipDict, get_geotable, extract_plot_coords, borders, remove_polyareas!, floattype, npolyareas
+using CountriesBorders: possible_selector_values, valid_column_names, mergeSkipDict, validate_skipDict, skipall, SkipDict, skipDict, get_geotable, extract_plot_coords, borders, remove_polyareas!, floattype, npolyareas, to_cart_point
 using CountriesBorders.GeoTablesConversion: POINT_CART
 using Meshes
 using CoordRefSystems
 using Test
 using Unitful
+
+@test to_cart_point(LatLon(0, 0)) isa POINT_CART{Float32}
 
 example1 = extract_countries(;continent = "europe", admin="-russia")
 example2 = extract_countries(;admin="-russia", continent = "europe")
