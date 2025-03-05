@@ -23,7 +23,7 @@ Meshes.nvertices(cb::CountryBorder) = nvertices(borders(LatLon, cb))
 Meshes.paramdim(cb::CountryBorder) = paramdim(cb.latlon)
 
 # Cartesian fallbacks
-Meshes.boundingbox(cb::CountryBorder) = boundingbox(borders(Cartesian, cb))
+Meshes.boundingbox(cb::CountryBorder) = boundingbox(cb.bboxes)
 
 Meshes.centroid(crs::VALID_CRS, cb::CountryBorder) = centroid(borders(crs, cb))
 Meshes.centroid(cb::CountryBorder) = centroid(Cartesian, cb)
@@ -73,10 +73,29 @@ Meshes.convexhull(m::CountryBorder) = convexhull(borders(Cartesian, m))
 Base.parent(cb::CountryBorder) = parent(LatLon, cb)
 Base.parent(crs::VALID_CRS, cb::CountryBorder) = parent(borders(crs, cb))
 
-Base.in(p::Point{𝔼{2}, <:Cartesian2D{WGS84Latest}}, cb::CountryBorder) = in(p, borders(Cartesian, cb))
-Base.in(p::Point{🌐, <:LatLon{WGS84Latest}}, cb::CountryBorder) = in(Meshes.flat(p), cb)
-Base.in(p::LatLon, cb::CountryBorder) = in(Point(LatLon{WGS84Latest, Deg{Float32}}(p.lat, p.lon)), cb)
-Base.in(p::LatLon, dmn::DOMAIN) = Point(p) in dmn
+"""
+    in_exit_early(p, polys, bboxes)
+Function that checks if a point is contained one of the polyareas in vector `polys` which are associated to the bounding boxes in vector `bboxes`.
+
+Both `polys` and `bboxes` must be vectors of the same size, with element type `POLY_CART` and `BBOX_CART` respectively.
+
+This function is basically pre-filtering points by checking inclusion in the bounding box which is significantly faster than checking for the polyarea itself.
+"""
+function in_exit_early(p, polys::Vector{<:POLY_CART{T}}, bboxes::Vector{<:BOX_CART{T}}) where T
+    p = to_cart_point(p, T)
+    for i in eachindex(polys, bboxes)
+        p in bboxes[i] || continue
+        p in polys[i] && return true
+    end
+    return false
+end
+
+to_cart_point(p::POINT_CART, T::Type{<:Real} = Float32) = convert(POINT_CART{T}, p)
+to_cart_point(p::POINT_LATLON, T::Type{<:Real} = Float32) = to_cart_point(Meshes.flat(p), T)
+to_cart_point(p::Union{LATLON, CART}, T::Type{<:Real} = Float32) = to_cart_point(Point(p), T)
+
+Base.in(p::VALID_POINT, cb::CountryBorder) = in_exit_early(p, parent(Cartesian, cb), cb.bboxes)
+Base.in(p::LATLON, dmn::Union{DOMAIN, CountryBorder}) = in(Point(p), dmn)
 
 # IO related
 function Meshes.prettyname(d::GSET) 

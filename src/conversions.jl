@@ -18,4 +18,4 @@ module GeoTablesConversion
 end
 
 using .GeoTablesConversion
-using .GeoTablesConversion: VALID_POINT, LATLON, CART, VALID_RING, GSET
+using .GeoTablesConversion: VALID_POINT, LATLON, CART, VALID_RING, GSET, POLY_CART, BOX_CART, POINT_LATLON, POINT_CART

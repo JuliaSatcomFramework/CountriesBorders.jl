@@ -15,6 +15,8 @@ const POLY_CART{T} = PolyArea{𝔼{2}, CART{T}, RING_CART{T}, Vector{RING_CART{T
 const MULTI_LATLON{T} = Multi{🌐, LATLON{T}, POLY_LATLON{T}}
 const MULTI_CART{T} = Multi{𝔼{2}, CART{T}, POLY_CART{T}}
 
+const BOX_CART{T} = Box{𝔼{2}, CART{T}}
+
 """
     CountryBorder{T} <: Geometry{🌐,LATLON{T}}
 
@@ -45,11 +47,14 @@ struct CountryBorder{T} <: Geometry{🌐,LATLON{T}}
     latlon::MULTI_LATLON{T}
     "The borders in Cartesian2D CRS"
     cart::MULTI_CART{T}
+    "The bounding boxes of each polyarea within the country, mostly used for early filtering"
+    bboxes::Vector{BOX_CART{T}}
     function CountryBorder(admin::String, latlon::MULTI_LATLON{T}, valid_polyareas::BitVector; resolution::Int, table_idx::Int) where {T}
         ngeoms = length(latlon.geoms)
         sum(valid_polyareas) === ngeoms || error("The number of set bits in the `valid_polyareas` vector must be equivalent to the number of PolyAreas in the `geom` input argument")
         cart = cartesian_geometry(latlon)
-        new{T}(admin, table_idx, valid_polyareas, resolution, latlon, cart)
+        bboxes = map(boundingbox, parent(cart))
+        new{T}(admin, table_idx, valid_polyareas, resolution, latlon, cart, bboxes)
     end
 end
 function CountryBorder(admin::AbstractString, geom::POLY_LATLON, valid_polyareas = BitVector((true,)); kwargs...)
@@ -74,6 +79,7 @@ function remove_polyareas!(cb::CountryBorder, idx::Int)
     for g in (latlon, cart)
         deleteat!(g.geoms, current_idx)
     end
+    deleteat!(cb.bboxes, current_idx)
     valid_polyareas[idx] = false
     return cb
 end

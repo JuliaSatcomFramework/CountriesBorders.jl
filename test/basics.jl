@@ -32,10 +32,18 @@ example3 = extract_countries(;subregion = "*europe; -eastern europe")
         LatLon(78.222, 15.652) # Svalbard Museum
     ]
 
+    # We don't use the const from the package to have more coverage
+    Skip_noncontinental_eu =  [
+        SkipFromAdmin("France", 1) # This skips Guyana
+        SkipFromAdmin("Norway", [
+            1, 3, 4 # Continental Norway is the 2nd PolyArea only
+        ])
+    ] |> skipDict
+
     dmn_excluded = extract_countries("italy; spain; france; norway"; skip_areas = [
         ("Italy", 2)
         "Spain"
-        SKIP_NONCONTINENTAL_EU
+        Skip_noncontinental_eu
     ])
     @test all(in(dmn_excluded), included_cities)
     @test all(!in(dmn_excluded), excluded_cities)
