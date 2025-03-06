@@ -1,7 +1,7 @@
 @testsnippet InterfacesSetup begin
     using Meshes
     using CountriesBorders
-    using CountriesBorders: borders
+    using CountriesBorders: borders, bboxes, polyareas
     using CoordRefSystems
     using Test
 end
@@ -38,4 +38,9 @@ end
         p = rand(Point; crs = LatLon)
         _in(p, dmn) == in(p, dmn)
     end
+end
+
+@testitem "polyareas and bboxes" setup=[InterfacesSetup] begin
+    dmn = extract_countries(;continent = "Europe")
+    @test collect(bboxes(dmn)) == bboxes(collect(polyareas(dmn)))
 end

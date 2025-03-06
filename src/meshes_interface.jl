@@ -17,10 +17,12 @@ polyareas(x) = polyareas(borders(Cartesian, x))
 polyareas(v::Vector{<:POLY_CART}) = v
 polyareas(x::MULTI_CART) = parent(x)
 polyareas(x::POLY_CART) = (x,)
+polyareas(dmn::DOMAIN) = Iterators.flatten(polyareas(el) for el in dmn)
 
 # This should return the cartesian bounding boxes for the polyareas of x, mostly to be used with in_exit_early
 bboxes(x) = map(boundingbox, polyareas(x))
 bboxes(cb::CountryBorder) = cb.bboxes
+bboxes(dmn::DOMAIN) = Iterators.flatten(bboxes(el) for el in dmn)
 
 # LatLon fallbacks
 Meshes.measure(cb::CountryBorder) = measure(borders(LatLon, cb))
