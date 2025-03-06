@@ -87,11 +87,11 @@ Both `polys` and `bboxes` must be vectors of the same size, with element type `P
 This function is basically pre-filtering points by checking inclusion in the bounding box which is significantly faster than checking for the polyarea itself.
 """
 function in_exit_early(p, polys, bboxes)
-    T = eltype(polys) |> crs |> CoordRefSystems.mactype
+    T = first(polys) |> crs |> CoordRefSystems.mactype
     p = to_cart_point(p, T)
-    for i in eachindex(polys, bboxes)
-        p in bboxes[i] || continue
-        p in polys[i] && return true
+    for (poly, box) in zip(polys, bboxes)
+        p in box || continue
+        p in poly && return true
     end
     return false
 end
