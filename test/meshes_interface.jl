@@ -1,7 +1,7 @@
 @testsnippet InterfacesSetup begin
     using Meshes
     using CountriesBorders
-    using CountriesBorders: borders, bboxes, polyareas
+    using CountriesBorders: borders, bboxes, polyareas, floattype
     using CoordRefSystems
     using Test
 end
@@ -44,3 +44,19 @@ end
     dmn = extract_countries(;continent = "Europe")
     @test collect(bboxes(dmn)) == bboxes(collect(polyareas(dmn)))
 end
+
+@testitem "floattype" setup=[InterfacesSetup] begin
+    dmn = extract_countries(;continent = "Europe")
+    cb = element(dmn, 1)
+    brdlat = borders(LatLon, cb)
+    brdcart = borders(Cartesian, cb)
+    p = rand(Point; crs = LatLon)
+    ll = rand(LatLon)
+    @test all((dmn, cb, brdlat, brdcart)) do el
+        floattype(el) == Float32
+    end
+    @test all((p, ll)) do el
+        floattype(el) == Float64
+    end
+end
+

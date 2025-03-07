@@ -2,8 +2,13 @@
 const VALID_CRS = Type{<:Union{LatLon, Cartesian}}
 
 # These are methods which are not really part of meshes
-floattype(::CountryBorder{T}) where {T} = T
-floattype(::DOMAIN{T}) where {T} = T
+floattype(::Type{<:CountryBorder{T}}) where {T} = T
+floattype(::Type{<:DOMAIN{T}}) where {T} = T
+floattype(::Type{<:Geometry{🌐,LATLON{T}}}) where T = T
+floattype(::Type{<:Geometry{𝔼{2},CART{T}}}) where T = T
+floattype(::Type{<:Union{LATLON{T}, CART{T}}}) where T = T
+floattype(::Type{<:VALID_POINT{T}}) where T = T
+floattype(x) = floattype(typeof(x))
 
 borders(::Type{LatLon}, cb::CountryBorder) = cb.latlon
 borders(::Type{Cartesian}, cb::CountryBorder) = cb.cart
@@ -89,7 +94,7 @@ Both `polys` and `bboxes` must be vectors of the same size, with element type `P
 This function is basically pre-filtering points by checking inclusion in the bounding box which is significantly faster than checking for the polyarea itself.
 """
 function in_exit_early(p, polys, bboxes)
-    T = first(polys) |> crs |> CoordRefSystems.mactype
+    T = first(polys) |> floattype
     p = to_cart_point(p, T)
     for (poly, box) in zip(polys, bboxes)
         p in box || continue
