@@ -1,10 +1,17 @@
 using CountriesBorders
-using CountriesBorders: possible_selector_values, valid_column_names, mergeSkipDict, validate_skipDict, skipall, SkipDict, skipDict, get_geotable, extract_plot_coords, borders, remove_polyareas!, floattype, npolyareas
+using CountriesBorders: possible_selector_values, valid_column_names, mergeSkipDict, validate_skipDict, skipall, SkipDict, skipDict, get_geotable, extract_plot_coords, borders, remove_polyareas!, floattype, to_cart_point, change_geometry, Cartesian, in_exit_early, polyareas
 using CountriesBorders.GeoTablesConversion: POINT_CART
 using Meshes
 using CoordRefSystems
 using Test
 using Unitful
+
+@test to_cart_point(LatLon(0, 0)) isa POINT_CART{Float32}
+poly = map([(-1,-1), (-1, 1), (1, 1), (1, -1)]) do p 
+    LatLon(p...) |> Point
+end |> PolyArea |> change_geometry(Cartesian)
+@test in_exit_early(LatLon(0,0), poly)
+
 
 example1 = extract_countries(;continent = "europe", admin="-russia")
 example2 = extract_countries(;admin="-russia", continent = "europe")
@@ -32,10 +39,18 @@ example3 = extract_countries(;subregion = "*europe; -eastern europe")
         LatLon(78.222, 15.652) # Svalbard Museum
     ]
 
+    # We don't use the const from the package to have more coverage
+    Skip_noncontinental_eu =  [
+        SkipFromAdmin("France", 1) # This skips Guyana
+        SkipFromAdmin("Norway", [
+            1, 3, 4 # Continental Norway is the 2nd PolyArea only
+        ])
+    ] |> skipDict
+
     dmn_excluded = extract_countries("italy; spain; france; norway"; skip_areas = [
         ("Italy", 2)
         "Spain"
-        SKIP_NONCONTINENTAL_EU
+        Skip_noncontinental_eu
     ])
     @test all(in(dmn_excluded), included_cities)
     @test all(!in(dmn_excluded), excluded_cities)
@@ -118,6 +133,7 @@ end
 
 @testset "Misc coverage" begin
     italy = extract_countries("italy") |> only
+    npolyareas(x) = length(polyareas(x))
     @test LatLon(41.9, 12.49) in italy
     @test npolyareas(italy) == 3
     remove_polyareas!(italy, 1)
