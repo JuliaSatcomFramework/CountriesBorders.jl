@@ -1,12 +1,13 @@
-using CountriesBorders
-using CountriesBorders: extract_plot_coords
-using CountriesBorders.Unitful
-using CountriesBorders.Meshes
-using PlotlyBase
-using Test
+@testsnippet setup_extensions begin
+    using CountriesBorders
+    using CountriesBorders: extract_plot_coords
+    using CountriesBorders.Unitful
+    using CountriesBorders.Meshes
+    using PlotlyBase
+    using Test
+end
 
-@testset "Region" begin
-
+@testitem "Region" setup=[setup_extensions] begin
     extract_coords(ring::Ring) =
         map(vertices(ring)) do p
             coords(p)
@@ -29,7 +30,7 @@ using Test
     @test count(isnan, sg_italy_nosicily.lat) == 1
 end
 
-@testset "Points" begin
+@testitem "Points" setup = [setup_extensions] begin
     cities = [
         SimpleLatLon(41.9, 12.49) # Rome
         SimpleLatLon(39.217, 9.113) # Cagliari
