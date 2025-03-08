@@ -15,6 +15,7 @@ using CoordRefSystems: Deg, Met
 
 export extract_countries, SKIP_NONCONTINENTAL_EU, SkipFromAdmin, SimpleLatLon, LatLon, Point
 export CountryBorder
+export extract_plot_coords
 
 include("conversions.jl")
 
