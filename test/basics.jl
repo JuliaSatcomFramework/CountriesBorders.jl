@@ -107,7 +107,7 @@ end
     merge!(sfa, SkipFromAdmin("France", 2), SkipFromAdmin("France", 3))
     @test sfb.idxs == sfa.idxs
 
-    @test to_cart_point(LatLon(0, 0)) isa POINT_CART{Float32}
+    @test to_cart_point(LatLon(0, 0)) isa POINT_CART{Float64}
     poly = map([(-1,-1), (-1, 1), (1, 1), (1, -1)]) do p 
         LatLon(p...) |> Point
     end |> PolyArea |> change_geometry(Cartesian)

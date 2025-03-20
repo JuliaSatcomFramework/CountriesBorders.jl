@@ -15,6 +15,7 @@ const POLY_CART{T} = PolyArea{𝔼{2}, CART{T}, RING_CART{T}, Vector{RING_CART{T
 const MULTI_LATLON{T} = Multi{🌐, LATLON{T}, POLY_LATLON{T}}
 const MULTI_CART{T} = Multi{𝔼{2}, CART{T}, POLY_CART{T}}
 
+const BOX_LATLON{T} = Box{🌐, LATLON{T}}
 const BOX_CART{T} = Box{𝔼{2}, CART{T}}
 
 """
@@ -95,69 +96,3 @@ const GSET{T} = GeometrySet{🌐, LATLON{T}, CountryBorder{T}}
 const SUBDOMAIN{T} = SubDomain{🌐, LATLON{T}, <:GSET{T}}
 const DOMAIN{T} = Union{GSET{T}, SUBDOMAIN{T}}
 
-"""
-    cartesian_geometry(poly::PolyArea{🌐,<:LATLON})
-    cartesian_geometry(multi::Multi{🌐,<:LATLON})
-
-Convert geometries from LatLon to Cartesian coordinate systems.
-
-## Arguments
-- `poly::PolyArea{🌐,<:LATLON}`: A polygon in LatLon coordinates.
-- `multi::Multi{🌐,<:LATLON}`: A multi-geometry in LatLon coordinates.
-
-## Returns
-- `PolyArea` or `Multi`: The converted geometry in Cartesian coordinate system.
-"""
-function cartesian_geometry(poly::POLY_LATLON)
-    map(rings(poly)) do r
-        map(Meshes.flat, vertices(r)) |> Ring
-    end |> splat(PolyArea)
-end
-cartesian_geometry(multi::MULTI_LATLON) = map(cartesian_geometry, parent(multi)) |> Multi
-cartesian_geometry(x::Union{MULTI_CART, POLY_CART}) = x
-
-"""
-    latlon_geometry(poly::PolyArea{𝔼{2},<:CART})
-    latlon_geometry(multi::Multi{𝔼{2},<:CART})
-
-Convert geometries from Cartesian to LatLon coordinate systems.
-
-## Arguments
-- `poly::PolyArea{𝔼{2},<:CART}`: A polygon in Cartesian coordinates.
-- `multi::Multi{𝔼{2},<:CART}`: A multi-geometry in Cartesian coordinates.
-
-## Returns
-- `PolyArea` or `Multi`: The converted geometry in LatLon coordinate system.
-"""
-function latlon_geometry(poly::POLY_CART)
-    map(rings(poly)) do r
-        map(vertices(r)) do v
-            LatLon{WGS84Latest}(coords(v).y |> ustrip, coords(v).x |> ustrip) |> Point
-        end |> Ring
-    end |> splat(PolyArea)
-end
-latlon_geometry(multi::MULTI_CART) = map(latlon_geometry, parent(multi)) |> Multi
-latlon_geometry(x::Union{MULTI_LATLON, POLY_LATLON}) = x
-
-
-"""
-    change_geometry(crs::Type{Cartesian}, x)
-    change_geometry(crs::Type{LatLon}, x)
-    change_geometry(crs)
-
-Change the underlying CRS of a geometry (currently only PolyAreas or Multi) from
-storing Cartesian to LatLon points (or vice versa).
-
-The last method only taking `Cartesian` or `LatLon` as input simply returns a function that will apply the provided CRS to any geometry ised as input.
-
-## Examples
-```julia
-using CountriesBorders
-
-
-```
-"""
-change_geometry(::Type{Cartesian}, x) = cartesian_geometry(x)
-change_geometry(::Type{LatLon}, x) = latlon_geometry(x)
-
-change_geometry(crs::Union{Type{Cartesian}, Type{LatLon}}) = Base.Fix1(change_geometry, crs)
