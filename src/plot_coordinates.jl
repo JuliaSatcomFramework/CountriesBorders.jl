@@ -7,6 +7,8 @@ Defaults to `true`
 """
 const INSERT_NAN = Base.ScopedValues.ScopedValue{Bool}(true)
 
+const VALID_PLOT_COORD = Union{LATLON, CART, VALID_POINT}
+
 # Extracting lat/lon coordaintes of the borders
 function extract_plot_coords!(lat::Vector{T}, lon::Vector{T}, ll::LATLON) where T <: Number
     f(x) = convert(T, ustrip(x))
@@ -22,7 +24,16 @@ function extract_plot_coords!(lat::Vector{T}, lon::Vector{T}, c::CART) where T <
 end
 extract_plot_coords!(lat, lon, p::VALID_POINT) = extract_plot_coords!(lat, lon, coords(p))
 
-function extract_plot_coords!(lat, lon, els::Vector)
+function extract_plot_coords!(lat, lon, els::AbstractVector{<:VALID_PLOT_COORD})
+    if INSERT_NAN[] && !isempty(lat) && !isempty(lon)
+        extract_plot_coords!(lat, lon, LatLon(NaN, NaN))
+    end
+    for el in els
+        extract_plot_coords!(lat, lon, el)
+    end
+    return nothing
+end
+function extract_plot_coords!(lat, lon, els::AbstractVector)
     for el in els
         extract_plot_coords!(lat, lon, el)
     end
