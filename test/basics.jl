@@ -167,6 +167,18 @@ end
         f(x,y) = (isnan(x) && isnan(y)) || x == y
         @test all(x -> f(x...), zip(a1, a2))
     end
+
+    # We test that it also works with vector of points or vector or vectors of points
+    lls = extract_plot_coords(rand(Point, 3; crs = LatLon))
+    @test count(isnan, lls.lat) == 0
+
+    lls = extract_plot_coords([rand(Point, 3; crs = LatLon) for _ in 1:2])
+    @test count(isnan, lls.lat) == 1
+
+    lls = Base.ScopedValues.with(INSERT_NAN => false) do
+        extract_plot_coords([rand(Point, 3; crs = LatLon) for _ in 1:2])
+    end
+    @test count(isnan, lls.lat) == 0
 end
 
 @testitem "Cartesian LatLon conversion" setup=[setup_basic] begin
