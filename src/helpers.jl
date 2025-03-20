@@ -6,6 +6,9 @@ floattype(::Type{<:Union{LATLON{T}, CART{T}}}) where T = T
 floattype(::Type{<:VALID_POINT{T}}) where T = T
 floattype(x) = floattype(typeof(x))
 
+to_raw_coords(c::Union{LATLON, CART}) = CoordRefSystems.raw(c)
+to_raw_coords(p::VALID_POINT) = to_raw_coords(coords(p))
+
 to_cart_point(T::Type{<:Real}, p::POINT_CART) = convert(POINT_CART{T}, p)
 to_cart_point(T::Type{<:Real}, p::POINT_LATLON) = to_cart_point(T, Meshes.flat(p))
 to_cart_point(T::Type{<:Real}, p::Union{LATLON, CART}) = to_cart_point(T, Point(p))
@@ -14,7 +17,7 @@ to_cart_point(x) = to_cart_point(floattype(x), x)
 
 to_latlon_point(T::Type{<:Real}, p::POINT_LATLON) = convert(POINT_LATLON{T}, p)
 function to_latlon_point(T::Type{<:Real}, p::POINT_CART) 
-    lon, lat = CoordRefSystems.raw(coords(p))
+    lon, lat = to_raw_coords(p)
     return LATLON{T}(lat * u"°", lon * u"°") |> Point
 end
 to_latlon_point(T::Type{<:Real}, p::Union{LATLON, CART}) = to_latlon_point(T, Point(p))

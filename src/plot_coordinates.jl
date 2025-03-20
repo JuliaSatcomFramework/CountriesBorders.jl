@@ -7,16 +7,50 @@ Defaults to `true`
 """
 const INSERT_NAN = Base.ScopedValues.ScopedValue{Bool}(true)
 
-const VALID_PLOT_COORD = Union{LATLON, CART, VALID_POINT}
+"""
+    PLOT_STRAIGHT_LINES
+
+ScopedValue use to control whether to plot straight lines between points within `extract_plot_coords!`.
+It does so by inserting artifical points if two points in a vector are too far in longitude (and would result in a curved line on the `scattergeo` plot).
+
+Defaults to `true`
+"""
+const PLOT_STRAIGHT_LINES = Base.ScopedValues.ScopedValue{Bool}(true)
+
+# This function will take two points in lat/lon and return a generator which produces more points to simulate straight lines on scattergeo plots. It has denser points closer to the poles as the distortion from scattergeo are more pronounced there
+function line_plot_coords(start, stop)
+    lon1, lat1 = to_raw_coords(start)
+    lon2, lat2 = to_raw_coords(stop)
+    Δlat = lat2 - lat1
+    Δlon = lon2 - lon1
+    if Δlon ≈ 0
+        return (start,)
+    end
+    nrm = hypot(Δlat, Δlon)
+    should_split = nrm > 10
+    min_length = should_split ? 10 : (200 / max(abs(lat1), abs(lat2), 10))
+    npts = ceil(Int, nrm / min_length)
+    lat_step = Δlat / npts
+    lon_step = Δlon / npts
+    f(n) = LatLon(lat1 + n * lat_step, lon1 + n * lon_step)
+    ns = 0:(npts-1)
+    if should_split
+        Iterators.flatten(line_plot_coords(f(n), f(n + 1)) for n in ns)
+    else
+        (f(n) for n in 0:(npts-1))
+    end
+end
+
+const VALID_PLOT_COORD = Union{LATLON,CART,VALID_POINT}
 
 # Extracting lat/lon coordaintes of the borders
-function extract_plot_coords!(lat::Vector{T}, lon::Vector{T}, ll::LATLON) where T <: Number
+function extract_plot_coords!(lat::Vector{T}, lon::Vector{T}, ll::LATLON) where T<:Number
     f(x) = convert(T, ustrip(x))
     push!(lat, f(ll.lat))
     push!(lon, f(ll.lon))
     return nothing
 end
-function extract_plot_coords!(lat::Vector{T}, lon::Vector{T}, c::CART) where T <: Number
+function extract_plot_coords!(lat::Vector{T}, lon::Vector{T}, c::CART) where T<:Number
     f(x) = convert(T, ustrip(x))
     push!(lat, f(c.y))
     push!(lon, f(c.x))
@@ -28,8 +62,20 @@ function extract_plot_coords!(lat, lon, els::AbstractVector{<:VALID_PLOT_COORD})
     if INSERT_NAN[] && !isempty(lat) && !isempty(lon)
         extract_plot_coords!(lat, lon, LatLon(NaN, NaN))
     end
-    for el in els
-        extract_plot_coords!(lat, lon, el)
+    if PLOT_STRAIGHT_LINES[]
+        for i in eachindex(els)[1:end-1]
+            start = els[i]
+            stop = els[i+1]
+            for pt in line_plot_coords(start, stop)
+                extract_plot_coords!(lat, lon, pt)
+            end
+        end
+        # We have to put the last one again
+        extract_plot_coords!(lat, lon, last(els))
+    else
+        for el in els
+            extract_plot_coords!(lat, lon, el)
+        end
     end
     return nothing
 end
@@ -41,19 +87,14 @@ function extract_plot_coords!(lat, lon, els::AbstractVector)
 end
 
 function extract_plot_coords!(lat, lon, ring::VALID_RING)
-    if INSERT_NAN[] && !isempty(lat) && !isempty(lon)
-        extract_plot_coords!(lat, lon, LatLon(NaN, NaN))
-    end
-    # Insert the coordinates of each point of the ring
-    for v in vertices(ring)
-        extract_plot_coords!(lat, lon, v)
-    end
+    # We plot the points in the ring
+    extract_plot_coords!(lat, lon, vertices(ring))
     # We add the first point to the end of the array to close the ring
     extract_plot_coords!(lat, lon, first(vertices(ring)))
     return nothing
 end
 
-geom_iterable(pa::Union{Multi, PolyArea}) = rings(pa)
+geom_iterable(pa::Union{Multi,PolyArea}) = rings(pa)
 geom_iterable(cb::CountryBorder) = rings(borders(cb))
 geom_iterable(d::Domain) = d
 
@@ -70,9 +111,9 @@ single trace.
 function extract_plot_coords!(lat, lon, inp)
     applicable(geom_iterable, inp) || throw(ArgumentError("last input of `extract_plot_coords!` must implement the `geom_iterable` function to use the generic fallback. Alternatively, a specific method for `extract_plot_coords!(lat, lon, inp)` must be implemented for type $(typeof(inp))."))
     iterable = geom_iterable(inp)
-	for geom ∈ iterable
+    for geom ∈ iterable
         extract_plot_coords!(lat, lon, geom)
-	end
+    end
     return nothing
 end
 
