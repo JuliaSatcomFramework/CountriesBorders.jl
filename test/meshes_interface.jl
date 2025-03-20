@@ -31,7 +31,7 @@ end
     using CountriesBorders: in_exit_early, Cartesian, borders, DOMAIN, to_cart_point
     dmn = extract_countries("*")
     # Add consistency checks with the standard `in` method not doing exit early
-    _in(p, cb::CountryBorder) = in(to_cart_point(p), borders(Cartesian, cb))
+    _in(p, cb::CountryBorder) = in(to_cart_point(floattype(cb), p), borders(Cartesian, cb))
     _in(p, dm::DOMAIN) = any(_in(p, e) for e in dm)
 
     @test all(1:100) do _

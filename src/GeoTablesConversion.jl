@@ -11,11 +11,9 @@ module GeoTablesConversion
     using Unitful: °
 
     export CountryBorder, DOMAIN, remove_polyareas!
-    export change_geometry, latlon_geometry, cartesian_geometry
+    export change_geometry, latlon_geometry, cartesian_geometry, to_cart_point, to_latlon_point, floattype
 
     include("main_type.jl")
+    include("helpers.jl")
     include("conversion_utils.jl")
 end
-
-using .GeoTablesConversion
-using .GeoTablesConversion: VALID_POINT, LATLON, CART, VALID_RING, GSET, POLY_CART, BOX_CART, POINT_LATLON, POINT_CART, MULTI_CART

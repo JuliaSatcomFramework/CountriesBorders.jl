@@ -7,17 +7,18 @@ using GeoInterface
 using Tables
 using GeoJSON
 using Artifacts
-using Unitful: Unitful, ustrip
+using Unitful: Unitful, ustrip, @u_str
 using PrecompileTools
 using NaturalEarth: NaturalEarth, naturalearth
 using CoordRefSystems
 using CoordRefSystems: Deg, Met
 
 export extract_countries, SKIP_NONCONTINENTAL_EU, SkipFromAdmin, SimpleLatLon, LatLon, Point
-export CountryBorder
-export extract_plot_coords
 
-include("conversions.jl")
+include("GeoTablesConversion.jl")
+using .GeoTablesConversion
+using .GeoTablesConversion: VALID_POINT, LATLON, CART, VALID_RING, GSET, POLY_CART, BOX_CART, POINT_LATLON, POINT_CART, MULTI_CART
+export CountryBorder
 
 const SimpleLatLon = LatLon
 const RegionBorders{T} = Union{CountryBorder{T}, DOMAIN{T}}
@@ -27,6 +28,7 @@ include("meshes_interface.jl")
 include("skip_polyarea.jl")
 include("implementation.jl")
 include("plot_coordinates.jl")
+export extract_plot_coords
 
 @compile_workload begin
     table = get_geotable()

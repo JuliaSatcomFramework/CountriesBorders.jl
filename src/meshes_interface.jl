@@ -2,13 +2,6 @@
 const VALID_CRS = Type{<:Union{LatLon, Cartesian}}
 
 # These are methods which are not really part of meshes
-floattype(::Type{<:CountryBorder{T}}) where {T} = T
-floattype(::Type{<:DOMAIN{T}}) where {T} = T
-floattype(::Type{<:Geometry{🌐,LATLON{T}}}) where T = T
-floattype(::Type{<:Geometry{𝔼{2},CART{T}}}) where T = T
-floattype(::Type{<:Union{LATLON{T}, CART{T}}}) where T = T
-floattype(::Type{<:VALID_POINT{T}}) where T = T
-floattype(x) = floattype(typeof(x))
 
 borders(::Type{LatLon}, cb::CountryBorder) = cb.latlon
 borders(::Type{Cartesian}, cb::CountryBorder) = cb.cart
@@ -95,7 +88,7 @@ This function is basically pre-filtering points by checking inclusion in the bou
 """
 function in_exit_early(p, polys, bboxes)
     T = first(polys) |> floattype
-    p = to_cart_point(p, T)
+    p = to_cart_point(T, p)
     for (poly, box) in zip(polys, bboxes)
         p in box || continue
         p in poly && return true
@@ -104,10 +97,6 @@ function in_exit_early(p, polys, bboxes)
 end
 # This is a catchall method for extension for other types
 in_exit_early(p, x) = in_exit_early(p, polyareas(x), bboxes(x))
-
-to_cart_point(p::POINT_CART, T::Type{<:Real} = Float32) = convert(POINT_CART{T}, p)
-to_cart_point(p::POINT_LATLON, T::Type{<:Real} = Float32) = to_cart_point(Meshes.flat(p), T)
-to_cart_point(p::Union{LATLON, CART}, T::Type{<:Real} = Float32) = to_cart_point(Point(p), T)
 
 Base.in(p::VALID_POINT, cb::CountryBorder) = in_exit_early(p, cb)
 Base.in(p::LATLON, dmn::Union{DOMAIN, CountryBorder}) = in(Point(p), dmn)

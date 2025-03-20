@@ -1,7 +1,7 @@
 @testsnippet setup_basic begin
     using CountriesBorders
-    using CountriesBorders: possible_selector_values, valid_column_names, mergeSkipDict, validate_skipDict, skipall, SkipDict, skipDict, get_geotable, extract_plot_coords, borders, remove_polyareas!, floattype, to_cart_point, change_geometry, Cartesian, in_exit_early, polyareas, INSERT_NAN
-    using CountriesBorders.GeoTablesConversion: POINT_CART, cartesian_geometry, latlon_geometry, change_geometry
+    using CountriesBorders: possible_selector_values, valid_column_names, mergeSkipDict, validate_skipDict, skipall, SkipDict, skipDict, get_geotable, extract_plot_coords, borders, remove_polyareas!, floattype, to_cart_point, change_geometry, Cartesian, in_exit_early, polyareas, INSERT_NAN, latlon_geometry, cartesian_geometry, floattype, to_latlon_point
+    using CountriesBorders.GeoTablesConversion: POINT_CART, POINT_LATLON, POLY_LATLON, POLY_CART, BOX_LATLON, BOX_CART
     using Meshes
     using CoordRefSystems
     using Test
@@ -107,7 +107,7 @@ end
     merge!(sfa, SkipFromAdmin("France", 2), SkipFromAdmin("France", 3))
     @test sfb.idxs == sfa.idxs
 
-    @test to_cart_point(LatLon(0, 0)) isa POINT_CART{Float32}
+    @test to_cart_point(LatLon(0, 0)) isa POINT_CART{Float64}
     poly = map([(-1,-1), (-1, 1), (1, 1), (1, -1)]) do p 
         LatLon(p...) |> Point
     end |> PolyArea |> change_geometry(Cartesian)
@@ -177,6 +177,21 @@ end
     multi_cartesian = Multi([pa_cartesian])
     multi_latlon = Multi([pa_latlon])
 
+    # Test the Box conversion
+    box_latlon = Box(
+        Point(LatLon(-10°, -10°)),
+        Point(LatLon(10°, 10°))
+    )
+
+    @test box_latlon |> change_geometry(Cartesian) isa BOX_CART{Float64}
+    @test box_latlon |> change_geometry(Cartesian, Float32) |> change_geometry(LatLon) isa BOX_LATLON{Float32}
+
+    @test pa_latlon |> change_geometry(LatLon, Float32) isa POLY_LATLON{Float32}
+    @test pa_latlon |> change_geometry(Cartesian, Float32) isa POLY_CART{Float32}
+
+    @test pa_latlon |> cartesian_geometry isa POLY_CART{Float64}
+    @test pa_cartesian |> latlon_geometry isa POLY_LATLON{Float64}
+
     @test pa_latlon |> change_geometry(Cartesian) |> change_geometry(LatLon) == pa_latlon
     @test pa_latlon |> change_geometry(LatLon) == pa_latlon
     @test pa_cartesian |> change_geometry(LatLon) |> change_geometry(Cartesian) == pa_cartesian
@@ -186,4 +201,6 @@ end
 
     @test multi_cartesian |> change_geometry(LatLon) == multi_latlon
     @test multi_latlon |> change_geometry(Cartesian) == multi_cartesian
+
+    @test rand(LatLon) |> to_latlon_point isa POINT_LATLON{Float64}
 end
