@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.4.7] - 2025-03-20
+
 ### Added
 - Added a method for `extract_plot_coords` to make it work automatically with a vector of valid points.
 
