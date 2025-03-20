@@ -37,6 +37,11 @@ The second method simply returns a function that applies the conversion with the
 ## Returns
 - The converted geometry, with points of type `POINT_CART{T}`.
 """
+function cartesian_geometry(T::Type{<:Real}, b::Union{BOX_LATLON, BOX_CART})
+    b isa BOX_CART{T} && return b
+    f = to_cart_point(T)
+    return BOX_CART{T}(f(b.min), f(b.max))
+end
 function cartesian_geometry(T::Type{<:Real}, ring::Union{RING_CART, RING_LATLON})
     ring isa RING_CART{T} && return ring
     map(to_cart_point(T), vertices(ring)) |> Ring
@@ -68,6 +73,11 @@ The second method simply returns a function that applies the conversion with the
 - The converted geometry, with points of type `POINT_LATLON{T}`.
 
 """
+function latlon_geometry(T::Type{<:Real}, b::Union{BOX_LATLON, BOX_CART})
+    b isa BOX_LATLON{T} && return b
+    f = to_latlon_point(T)
+    return BOX_LATLON{T}(f(b.min), f(b.max))
+end
 function latlon_geometry(T::Type{<:Real}, ring::Union{RING_CART, RING_LATLON})
     ring isa RING_LATLON{T} && return ring
     map(to_latlon_point(T), vertices(ring)) |> Ring
