@@ -28,7 +28,19 @@ function line_plot_coords(start, stop)
     end
     nrm = hypot(Δlat, Δlon)
     should_split = nrm > 10
-    min_length = should_split ? 10 : (200 / max(abs(lat1), abs(lat2), 10))
+    min_length = if should_split 
+        10 
+    else 
+        maxlat = max(abs(lat1), abs(lat2))
+        val = (100 / min(maxlat, 10)) 
+        if maxlat > 65
+            val /= 2
+        end
+        if maxlat > 80
+            val /= 2
+        end
+        val
+    end
     npts = ceil(Int, nrm / min_length)
     lat_step = Δlat / npts
     lon_step = Δlon / npts
