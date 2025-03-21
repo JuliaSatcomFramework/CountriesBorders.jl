@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.4.8] - 2025-03-21
+
+### Added
+- Added a new ScopedValue `PLOT_STRAIGHT_LINES` to control whether `extract_plot_coords` should oversample points which are far apart in order to make lines in scattergeo look more straight. This is true by default.
+- For inputs which are vector of points, `extract_plot_coords` now accepts a `copy_first_point` keyword argument to control whether the function should copy the first point at the end of the array after each vector of points to simulate `closing` a ring.
+- Methods fo `polyareas` and `boxes` are now defined for `BOX_CART` geometries.
+
+### Fixed
+- All coordinates of the countries polyareas are now corrected during construction to ensure that rings of countries touching the antimeridian (longitude = 180) have a sign of the longitude which is consistent with the neighboring points within the same ring.
+  - This only applies to some polyareas in Russia, Anctartica and few other countries
+
 ## [0.4.7] - 2025-03-20
 
 ### Added
