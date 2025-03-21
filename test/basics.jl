@@ -142,7 +142,7 @@ end
 
 @testitem "Extract plot coords" setup=[setup_basic] begin
 # We test that extract_plot_coords gives first lat and then lon
-    using CountriesBorders: PLOT_STRAIGHT_LINES
+    using CountriesBorders: with_settings
 
     dmn = extract_countries("italy")
     @test extract_plot_coords(dmn) isa @NamedTuple{lat::Vector{Float32}, lon::Vector{Float32}}
@@ -155,7 +155,7 @@ end
     f(x, n) = count(isnan, x) === n
     @test f(plc.lat, 2) && f(plc.lon, 2)
     @test extract_plot_coords(Float64, fr) |> eltype |> eltype === Float64
-    plc = Base.ScopedValues.with(INSERT_NAN => false) do
+    plc = with_settings(:INSERT_NAN => false) do
         extract_plot_coords(fr)
     end
     @test f(plc.lat, 0) && f(plc.lon, 0)
@@ -178,7 +178,7 @@ end
     lls = extract_plot_coords([rand(Point, 3; crs = LatLon) for _ in 1:2])
     @test count(isnan, lls.lat) == 1
 
-    lls = Base.ScopedValues.with(INSERT_NAN => false) do
+    lls = with_settings(:INSERT_NAN => false) do
         extract_plot_coords([rand(Point, 3; crs = LatLon) for _ in 1:2])
     end
     @test count(isnan, lls.lat) == 0
@@ -189,13 +189,13 @@ end
         to_cart_point(LatLon(30, 180)),
     )
     poly = polyareas(b) |> first
-    Base.ScopedValues.with(PLOT_STRAIGHT_LINES => true) do
+    with_settings(:PLOT_STRAIGHT_LINES => :NORMAL) do
         plc = extract_plot_coords(poly)
         # The +1 is because extract replicates the first point
         @test length(plc.lat) > length(vertices(poly)) + 1
     end
 
-    Base.ScopedValues.with(PLOT_STRAIGHT_LINES => false) do
+    with_settings(:PLOT_STRAIGHT_LINES => :NONE) do
         plc = extract_plot_coords(poly)
         @test length(plc.lat) == length(vertices(poly)) + 1
     end
@@ -203,9 +203,23 @@ end
     # We test the copy_first_point keyword when providing directly a vector of points
     r = rings(poly) |> first
     vs = vertices(r)
-    Base.ScopedValues.with(PLOT_STRAIGHT_LINES => false) do
-        @test length(extract_plot_coords(vs).lat) == length(vs)
-        @test length(extract_plot_coords(vs; copy_first_point = true).lat) == length(vs) + 1
+    @test length(extract_plot_coords(vs).lat) == length(vs)
+    with_settings(:CLOSE_VECTORS => true) do
+        @test length(extract_plot_coords(vs).lat) == length(vs) + 1
+    end
+
+    ps = [LatLon(0, -179), LatLon(0, 179)]
+    with_settings(:PLOT_STRAIGHT_LINES => :NONE) do
+        @test extract_plot_coords(ps).lon |> length == 2
+    end
+    with_settings(:PLOT_STRAIGHT_LINES => :NORMAL) do
+        @test extract_plot_coords(ps).lon |> length > 10
+    end
+    with_settings(:PLOT_STRAIGHT_LINES => :SHORT) do
+        @test extract_plot_coords(ps).lon |> length == 3 # We have three here as we just adding the antimeridian point as the distance is quite short
+    end
+    with_settings([:PLOT_STRAIGHT_LINES => :NORMAL]) do
+        @test extract_plot_coords([LatLon(89, 0), LatLon(0, 0)]).lon |> length == 2
     end
 end
 
