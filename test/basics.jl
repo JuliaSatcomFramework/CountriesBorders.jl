@@ -115,6 +115,7 @@ end
 
     # We test that 50m resolution has more polygons than the default 110m one
     @test length(get_geotable(;resolution = 50).geometry) > length(get_geotable().geometry)
+    @test length(get_geotable(;resolution = 10).geometry) > length(get_geotable(;resolution = 50).geometry)
 
     italy = extract_countries("italy") |> only
     npolyareas(x) = length(polyareas(x))

@@ -31,6 +31,7 @@ end
 end
 
 @testitem "Points" setup = [setup_extensions] begin
+    using CountriesBorders: PLOT_STRAIGHT_LINES
     cities = [
         SimpleLatLon(41.9, 12.49) # Rome
         SimpleLatLon(39.217, 9.113) # Cagliari
@@ -38,7 +39,9 @@ end
         SimpleLatLon(59.913, 10.738) # Oslo
     ]
 
-    sg = cities |> scattergeo
+    sg = Base.ScopedValues.with(PLOT_STRAIGHT_LINES => false) do
+        cities |> scattergeo
+    end
 
     @test sg.lat == map(x -> x.lat |> ustrip |> Float32, cities)
     @test sg.lon == map(x -> x.lon |> ustrip |> Float32, cities)
