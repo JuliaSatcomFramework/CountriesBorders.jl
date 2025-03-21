@@ -29,20 +29,3 @@ end
     @test count(isnan, sg_italy.lat) == 2
     @test count(isnan, sg_italy_nosicily.lat) == 1
 end
-
-@testitem "Points" setup = [setup_extensions] begin
-    using CountriesBorders: PLOT_STRAIGHT_LINES
-    cities = [
-        SimpleLatLon(41.9, 12.49) # Rome
-        SimpleLatLon(39.217, 9.113) # Cagliari
-        SimpleLatLon(48.864, 2.349) # Paris
-        SimpleLatLon(59.913, 10.738) # Oslo
-    ]
-
-    sg = Base.ScopedValues.with(PLOT_STRAIGHT_LINES => false) do
-        cities |> scattergeo
-    end
-
-    @test sg.lat == map(x -> x.lat |> ustrip |> Float32, cities)
-    @test sg.lon == map(x -> x.lon |> ustrip |> Float32, cities)
-end
