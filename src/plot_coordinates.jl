@@ -58,7 +58,7 @@ function extract_plot_coords!(lat::Vector{T}, lon::Vector{T}, c::CART) where T<:
 end
 extract_plot_coords!(lat, lon, p::VALID_POINT) = extract_plot_coords!(lat, lon, coords(p))
 
-function extract_plot_coords!(lat, lon, els::AbstractVector{<:VALID_PLOT_COORD})
+function extract_plot_coords!(lat, lon, els::AbstractVector{<:VALID_PLOT_COORD}; copy_first_point = false)
     if INSERT_NAN[] && !isempty(lat) && !isempty(lon)
         extract_plot_coords!(lat, lon, LatLon(NaN, NaN))
     end
@@ -77,20 +77,21 @@ function extract_plot_coords!(lat, lon, els::AbstractVector{<:VALID_PLOT_COORD})
             extract_plot_coords!(lat, lon, el)
         end
     end
+    if copy_first_point
+        extract_plot_coords!(lat, lon, first(els))
+    end
     return nothing
 end
-function extract_plot_coords!(lat, lon, els::AbstractVector)
+function extract_plot_coords!(lat, lon, els::AbstractVector; kwargs...)
     for el in els
-        extract_plot_coords!(lat, lon, el)
+        extract_plot_coords!(lat, lon, el; kwargs...)
     end
     return nothing
 end
 
 function extract_plot_coords!(lat, lon, ring::VALID_RING)
     # We plot the points in the ring
-    extract_plot_coords!(lat, lon, vertices(ring))
-    # We add the first point to the end of the array to close the ring
-    extract_plot_coords!(lat, lon, first(vertices(ring)))
+    extract_plot_coords!(lat, lon, vertices(ring); copy_first_point = true)
     return nothing
 end
 
@@ -108,11 +109,11 @@ and `lon` contain the concateneated lat/lon values of each ring separated by
 `NaN32` values. This is done to allow plotting multiple separated borders in a
 single trace.
 """
-function extract_plot_coords!(lat, lon, inp)
+function extract_plot_coords!(lat, lon, inp; kwargs...)
     applicable(geom_iterable, inp) || throw(ArgumentError("last input of `extract_plot_coords!` must implement the `geom_iterable` function to use the generic fallback. Alternatively, a specific method for `extract_plot_coords!(lat, lon, inp)` must be implemented for type $(typeof(inp))."))
     iterable = geom_iterable(inp)
     for geom ∈ iterable
-        extract_plot_coords!(lat, lon, geom)
+        extract_plot_coords!(lat, lon, geom; kwargs...)
     end
     return nothing
 end
@@ -124,10 +125,10 @@ Returns a NamedTuple with two vectors `lat` and `lon` containing the correspondi
 
 This is mostly intended to simplify creation of the `lat` and `lon` keyword arguments to provide to the `scattergeo` function from `PlotlyBase`. By default points are converted to Float32 and NaN values are inserted between each `Ring` to allow plotting multiple polyareas within a single trace.
 """
-function extract_plot_coords(T::Type{<:AbstractFloat}, item)
+function extract_plot_coords(T::Type{<:AbstractFloat}, item; kwargs...)
     lat = T[]
     lon = T[]
-    extract_plot_coords!(lat, lon, item)
+    extract_plot_coords!(lat, lon, item; kwargs...)
     return (; lat, lon)
 end
-extract_plot_coords(item) = extract_plot_coords(Float32, item)
+extract_plot_coords(item; kwargs...) = extract_plot_coords(Float32, item; kwargs...)
