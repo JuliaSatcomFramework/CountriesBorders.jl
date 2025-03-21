@@ -1,7 +1,7 @@
 @testsnippet InterfacesSetup begin
     using Meshes
     using CountriesBorders
-    using CountriesBorders: borders, bboxes, polyareas, floattype
+    using CountriesBorders: borders, bboxes, polyareas, floattype, to_cart_point
     using CoordRefSystems
     using Test
 end
@@ -43,6 +43,12 @@ end
 @testitem "polyareas and bboxes" setup=[InterfacesSetup] begin
     dmn = extract_countries(;continent = "Europe")
     @test collect(bboxes(dmn)) == bboxes(collect(polyareas(dmn)))
+
+    b = Box(
+        to_cart_point(LatLon(-30, -180)),
+        to_cart_point(LatLon(30, 180)),
+    )
+    @test bboxes(b) |> first === b
 end
 
 @testitem "floattype" setup=[InterfacesSetup] begin
