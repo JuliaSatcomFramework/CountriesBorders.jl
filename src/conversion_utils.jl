@@ -30,7 +30,7 @@ SOFTWARE.
 
 # This function assumes that a set of points represent a valid GeoJSON geometry (which is already split to avoid antimeridian problems) and simply makes sure that the sign of the longitude at 180° is consistent with the remaining points in the ring
 function fix_antimeridian_sign!(points::Vector{<:POINT_LATLON})
-    cond(p) = abs(coords(p).lon) ≈ 180u"°"
+    cond(p) = abs(coords(p).lon) == 180u"°"
     getsign(p) = sign(coords(p).lon)
     any(cond, points) || return
     signpoint = points[findfirst(!cond, points)]
