@@ -15,10 +15,24 @@ polyareas(x) = polyareas(borders(Cartesian, x))
 polyareas(v::Vector{<:POLY_CART}) = v
 polyareas(x::MULTI_CART) = parent(x)
 polyareas(x::POLY_CART) = (x,)
+function polyareas(b::BOX_CART)
+	lo, hi = extrema(b) .|> to_raw_coords
+    lo_lon, lo_lat = lo
+    hi_lon, hi_lat = hi
+    f = to_cart_point
+    p = Ring([
+        f(LatLon(hi_lat, lo_lon)),
+        f(LatLon(hi_lat, hi_lon)),
+        f(LatLon(lo_lat, hi_lon)),
+        f(LatLon(lo_lat, lo_lon)),
+    ]) |> PolyArea
+    return (p, )
+end
 polyareas(dmn::DOMAIN) = Iterators.flatten(polyareas(el) for el in dmn)
 
 # This should return the cartesian bounding boxes for the polyareas of x, mostly to be used with in_exit_early
 bboxes(x) = map(boundingbox, polyareas(x))
+bboxes(b::BOX_CART) = (b,)
 bboxes(cb::CountryBorder) = cb.bboxes
 bboxes(dmn::DOMAIN) = Iterators.flatten(bboxes(el) for el in dmn)
 

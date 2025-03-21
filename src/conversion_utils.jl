@@ -28,6 +28,24 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 =#
 
+# This function assumes that a set of points represent a valid GeoJSON geometry (which is already split to avoid antimeridian problems) and simply makes sure that the sign of the longitude at 180° is consistent with the remaining points in the ring
+function fix_antimeridian_sign!(points::Vector{<:POINT_LATLON})
+    cond(p) = abs(coords(p).lon) == 180u"°"
+    getsign(p) = sign(coords(p).lon)
+    any(cond, points) || return
+    signpoint = points[findfirst(!cond, points)]
+    s = getsign(signpoint)
+    for (i, p) in enumerate(points)
+        if cond(p)
+            c = coords(p)
+            points[i] = LatLon(c.lat, copysign(c.lon, s)) |> Point
+        else
+            s = getsign(p) # We use the sign of the latest valid point as relevant for the sign. This is mostly needed for antarctica which spans all latitudes
+        end
+    end
+    return nothing
+end
+
 # The commented out lines below are those not needed for parsing the specific file of countries borders. These might be enabled in the future if needed.
 
 # Part from https://github.com/JuliaEarth/GeoIO.jl/blob/8c0eb84223ecf8a8601850f8b7cc27f81a18d68c/src/conversion.jl.
@@ -42,6 +60,7 @@ function tochain(geom)
     while first(points) == last(points) && length(points) ≥ 2
       pop!(points)
     end
+    fix_antimeridian_sign!(points)
     Ring(points)
   end
 end

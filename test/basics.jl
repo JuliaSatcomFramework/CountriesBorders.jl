@@ -115,6 +115,7 @@ end
 
     # We test that 50m resolution has more polygons than the default 110m one
     @test length(get_geotable(;resolution = 50).geometry) > length(get_geotable().geometry)
+    @test length(get_geotable(;resolution = 10).geometry) > length(get_geotable(;resolution = 50).geometry)
 
     italy = extract_countries("italy") |> only
     npolyareas(x) = length(polyareas(x))
@@ -141,6 +142,8 @@ end
 
 @testitem "Extract plot coords" setup=[setup_basic] begin
 # We test that extract_plot_coords gives first lat and then lon
+    using CountriesBorders: PLOT_STRAIGHT_LINES
+
     dmn = extract_countries("italy")
     @test extract_plot_coords(dmn) isa @NamedTuple{lat::Vector{Float32}, lon::Vector{Float32}}
     ps = rand(Point, 100; crs = LatLon)
@@ -179,6 +182,31 @@ end
         extract_plot_coords([rand(Point, 3; crs = LatLon) for _ in 1:2])
     end
     @test count(isnan, lls.lat) == 0
+
+    # We test that the extract_plot_coords increase the number of points for very long lines
+    b = Box(
+        to_cart_point(LatLon(-30, -180)),
+        to_cart_point(LatLon(30, 180)),
+    )
+    poly = polyareas(b) |> first
+    Base.ScopedValues.with(PLOT_STRAIGHT_LINES => true) do
+        plc = extract_plot_coords(poly)
+        # The +1 is because extract replicates the first point
+        @test length(plc.lat) > length(vertices(poly)) + 1
+    end
+
+    Base.ScopedValues.with(PLOT_STRAIGHT_LINES => false) do
+        plc = extract_plot_coords(poly)
+        @test length(plc.lat) == length(vertices(poly)) + 1
+    end
+
+    # We test the copy_first_point keyword when providing directly a vector of points
+    r = rings(poly) |> first
+    vs = vertices(r)
+    Base.ScopedValues.with(PLOT_STRAIGHT_LINES => false) do
+        @test length(extract_plot_coords(vs).lat) == length(vs)
+        @test length(extract_plot_coords(vs; copy_first_point = true).lat) == length(vs) + 1
+    end
 end
 
 @testitem "Cartesian LatLon conversion" setup=[setup_basic] begin
