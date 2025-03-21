@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Changed
+- Changed the way plot settings are handled, and stop having `PLOT_STRAIGHT_LINES` being true by default.
+  - The user-customizable settings should now be set using the `with_settings` function (not exported)
+
+### Removed
+- Removed the method for `scattergeo` acting on vector of LatLon points as it was type piracy.
+
 ## [0.4.8] - 2025-03-21
 
 ### Added
