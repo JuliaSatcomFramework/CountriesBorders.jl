@@ -6,7 +6,7 @@ using Meshes: 🌐, printelms
 using GeoInterface
 using Tables
 using GeoJSON
-using GeoPlottingHelpers: GeoPlottingHelpers, with_settings, extract_latlon_coords, extract_latlon_coords!
+using GeoPlottingHelpers: GeoPlottingHelpers, with_settings, extract_latlon_coords, extract_latlon_coords!, geo_plotly_trace
 using Artifacts
 using Unitful: Unitful, ustrip, @u_str
 using PrecompileTools
