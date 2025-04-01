@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.4.10] - 2025-04-01
+
 ### Changed
 - The package now does not define plotting helpers anymore, but just relies on the new `GeoPlottingHelpers` package for that. The `extract_plot_coords` and `extract_plot_coords!` functions are now deprecated and will be removed in a future release. Users should migrate to use the `GeoPlottingHelpers.extract_latlon_coords` and `GeoPlottingHelpers.extract_latlon_coords!` functions directly.
 
