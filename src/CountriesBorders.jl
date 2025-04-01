@@ -25,6 +25,7 @@ const SimpleLatLon = LatLon
 const RegionBorders{T} = Union{CountryBorder{T}, DOMAIN{T}}
 
 include("geotable.jl")
+include("coastlines.jl")
 include("meshes_interface.jl")
 include("skip_polyarea.jl")
 include("implementation.jl")

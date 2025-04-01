@@ -1,4 +1,7 @@
 GeoPlottingHelpers.geom_iterable(cb::CountryBorder) = rings(borders(cb))
+# CoastLines
+GeoPlottingHelpers.geom_iterable(cb::CoastLines) = cb.raw_points
+GeoPlottingHelpers.geo_plotly_trace_default_kwargs(cb::CoastLines, tracefunc) = (; mode = "lines")
 
 """
     extract_plot_coords(args...)
