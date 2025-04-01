@@ -6,6 +6,7 @@ using Meshes: 🌐, printelms
 using GeoInterface
 using Tables
 using GeoJSON
+using GeoPlottingHelpers: GeoPlottingHelpers, with_settings, extract_latlon_coords, extract_latlon_coords!, geo_plotly_trace
 using Artifacts
 using Unitful: Unitful, ustrip, @u_str
 using PrecompileTools
@@ -28,7 +29,7 @@ include("meshes_interface.jl")
 include("skip_polyarea.jl")
 include("implementation.jl")
 include("plot_coordinates.jl")
-export extract_plot_coords
+export extract_plot_coords, extract_latlon_coords
 
 @compile_workload begin
     table = get_geotable()
