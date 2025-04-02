@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.4.11] - 2025-04-02
+
 ### Added
 - Added a `resolution` keyword argument to `extract_countries` (only when not explicitly providing the `geotable` argument) to allow for different resolutions to be used for the extraction of countries.
 - Added the `get_coastlines` function (exported) whichi simply allows getting `CoastLines` object containing the points of the coastlines extracted from the NaturalEarth dataset at a specific resolution.
