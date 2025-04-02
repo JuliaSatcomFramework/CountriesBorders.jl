@@ -139,6 +139,58 @@ end
     @test centroid(dmn, 1) isa POINT_CART
 end    
 
+@testitem "Coastlines" setup=[setup_basic] begin
+    using CountriesBorders: CoastLines
+    using PlotlyBase
+    using CountriesBorders.GeoPlottingHelpers: geom_iterable, geo_plotly_trace
+    cl = get_coastlines()
+    @test cl isa CoastLines
+    @test cl.resolution == 110
+
+    cl = get_coastlines(;resolution = 50)
+    @test cl isa CoastLines
+    @test cl.resolution == 50
+
+    @test repr(cl) == "CoastLines, resolution = 50m"
+    @test geom_iterable(cl) == cl.raw_points
+    @test geo_plotly_trace(cl).mode == "lines"
+end
+
+@testitem "Resolution" setup=[setup_basic] begin
+    using CountriesBorders: RESOLUTION, DOMAIN, CoastLines, DEFAULT_RESOLUTION
+    using CountriesBorders.ScopedValues: with
+    using CountriesBorders.Meshes: element
+
+    resolution(cb::CountryBorder) = cb.resolution
+    resolution(cl::CoastLines) = cl.resolution
+    resolution(d::DOMAIN) = resolution(element(d, 1))
+
+    @test resolution(extract_countries("italy")) == 110
+    @test resolution(get_coastlines()) == 110
+
+    # Check with ScopedValue
+    with(RESOLUTION => 50) do
+        @test resolution(extract_countries("italy")) == 50
+        @test resolution(get_coastlines()) == 50
+    end
+
+    @test resolution(extract_countries("italy")) == 110
+    @test resolution(get_coastlines()) == 110
+
+    DEFAULT_RESOLUTION[] = 50
+
+    @test resolution(extract_countries("italy")) == 50
+    @test resolution(get_coastlines()) == 50
+
+    DEFAULT_RESOLUTION[] = 110
+end
+
+@testitem "Deprecations" setup=[setup_basic] begin
+    using CountriesBorders: extract_plot_coords, to_raw_coords
+    
+    @test_logs (:warn, r"deprecated") to_raw_coords(LatLon(10°, 10°))
+    @test_logs (:warn, r"deprecated") extract_plot_coords(LatLon(10°, 10°))
+end
 
 @testitem "Extract plot coords" setup=[setup_basic] begin
 # We test that extract_plot_coords gives first lat and then lon

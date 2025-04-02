@@ -91,6 +91,8 @@ informations among the columns
 The downselection of countries to form a domain is performed by passing keyword
 arguments containing `String` or `Vector{String}` values. 
 
+The `resolution` keyword argument can be used to request a specific resolution and can be a value among 10, 50 and 110 (the only values provided by the underlying naturaleart dataset). This value defaults to `nothing` in which case it uses the default resolution of 110.
+
 # Extended Help
 
 ## Input Parsing
@@ -200,4 +202,4 @@ end
 # Method that just searches the admin column
 extract_countries(name::Union{AbstractString,Vector{<:AbstractString}}, output_domain::Val = Val{true}(); kwargs...) = extract_countries(output_domain; admin=name, kwargs...)
 # Method that provides just the Val
-extract_countries(output_domain::Val{S}; resolution = nothing, kwargs...) where {S} = extract_countries(get_geotable(; resolution), output_domain; kwargs...)
+extract_countries(output_domain::Val{S} = Val{true}(); resolution = nothing, kwargs...) where {S} = extract_countries(get_geotable(; resolution), output_domain; kwargs...)

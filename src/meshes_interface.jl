@@ -13,7 +13,7 @@ polyareas(v::Vector{<:POLY_CART}) = v
 polyareas(x::MULTI_CART) = parent(x)
 polyareas(x::POLY_CART) = (x,)
 function polyareas(b::BOX_CART)
-	lo, hi = extrema(b) .|> to_raw_coords
+	lo, hi = extrema(b) .|> to_raw_lonlat
     lo_lon, lo_lat = lo
     hi_lon, hi_lat = hi
     f = to_cart_point

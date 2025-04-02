@@ -3,7 +3,7 @@ module CountriesBorders
 using GeoTables
 using CoordRefSystems: CoordRefSystems, LatLon, Cartesian2D, WGS84Latest, Deg, Met, Cartesian
 using Meshes: Meshes, Geometry, CRS, 🌐, Multi, 𝔼, Point, MultiPolygon, printelms, Ring, PolyArea, Box, GeometrySet, SubDomain, Domain
-using Meshes: measure, nvertices, paramdim, centroid, boundingbox, to, volume, element, discretize, rings, vertices, simplexify, pointify, convexhull
+using Meshes: measure, nvertices, nelements, paramdim, centroid, boundingbox, to, volume, element, discretize, rings, vertices, simplexify, pointify, convexhull
 using CircularArrays: CircularArrays, CircularArray
 using GeoInterface
 using Tables
@@ -30,7 +30,9 @@ include("helpers.jl")
 include("GeoTablesConversion.jl")
 
 include("countries_geotable.jl")
+
 include("coastlines.jl")
+export get_coastlines
 
 # This file also defines `borders`
 include("meshes_interface.jl")

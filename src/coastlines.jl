@@ -1,5 +1,16 @@
 const COASTLINES_DICT = Dict{Int, CoastLines}()
 
+"""
+    get_coastlines(; resolution = nothing, force = false)
+
+Get the `CoastLines` object containing the points of the coastlines extracted from the NaturalEarth dataset at a specific resolution.
+
+This object is mostly useful for plotting and can be fed directly to either the `extract_latlon_cords` or the `geo_plotly_trace` functions provided by the `GeoPlottingHelpers` package.
+
+# Keyword Arguments
+- `resolution`: The resolution of the coastlines to get. If `nothing`, the default resolution is used.
+- `force`: If `true`, the coastlines are recalculated even if they already exist.
+"""
 function get_coastlines(; resolution = nothing, force = false)
     resolution = check_resolution(resolution; force)
     force && haskey(COASTLINES_DICT, resolution) && delete!(COASTLINES_DICT, resolution)

@@ -8,7 +8,7 @@ module GeoTablesConversion
     using Unitful: Unitful, @u_str
 
     # Types
-    using ..CountriesBorders: LATLON, CART, POINT_LATLON, POINT_CART, VALID_POINT, RING_LATLON, RING_CART, VALID_RING, POLY_LATLON, POLY_CART, MULTI_LATLON, MULTI_CART, BOX_LATLON, BOX_CART, CountryBorder
+    using ..CountriesBorders: LATLON, CART, POINT_LATLON, POINT_CART, VALID_POINT, RING_LATLON, RING_CART, VALID_RING, POLY_LATLON, POLY_CART, MULTI_LATLON, MULTI_CART, BOX_LATLON, BOX_CART, CountryBorder, DOMAIN
     # Helpers
     using ..CountriesBorders: to_cart_point, to_latlon_point, floattype, to_raw_coords, cartesian_geometry, latlon_geometry, change_geometry, remove_polyareas!
 

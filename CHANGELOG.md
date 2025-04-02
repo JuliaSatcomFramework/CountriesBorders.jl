@@ -9,11 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Added a `resolution` keyword argument to `extract_countries` (only when not explicitly providing the `geotable` argument) to allow for different resolutions to be used for the extraction of countries.
-- Added the `get_coastlines` function 
+- Added the `get_coastlines` function (exported) whichi simply allows getting `CoastLines` object containing the points of the coastlines extracted from the NaturalEarth dataset at a specific resolution.
+- Added a `RESOLUTION` ScopedValue and a `DEFAULT_RESOLUTION` `Ref` (both not exported) that can be used to modify the default resolution (10, 50 or 110) for the `extract_countries` and the `get_coastlines` functions either temporarily within a scope or permanently with `DEFAULT_RESOLUTION[] = value`.
 
 ### Changed
 - Refactored the structure of the code, and now all types are defined in the toplevel module (though still accessible also from the GeoTablesConversion module)
 - Changed the way the default GeoTable for Countries Borders is stored internally. It is now stored inside a Dict
+- The `to_raw_coords` function is now deprecated and will be removed in a future release. Users should migrate to use the `GeoPlottingHelpers.to_raw_lonlat` function instead.
+
+### Removed
+- The `set_geotable!` and `get_default_geotable_resolution` functions are now removed as the new storing of the Countries GeoTable is a plain Dict. They were not exported or part of the public interface so this does not represent a breaking change.
 
 ## [0.4.10] - 2025-04-01
 
