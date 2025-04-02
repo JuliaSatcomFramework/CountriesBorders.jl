@@ -1,38 +1,56 @@
 module CountriesBorders
 
 using GeoTables
-using Meshes
-using Meshes: 🌐, printelms
+using CoordRefSystems: CoordRefSystems, LatLon, Cartesian2D, WGS84Latest, Deg, Met, Cartesian
+using Meshes: Meshes, Geometry, CRS, 🌐, Multi, 𝔼, Point, MultiPolygon, printelms, Ring, PolyArea, Box, GeometrySet, SubDomain, Domain
+using Meshes: measure, nvertices, nelements, paramdim, centroid, boundingbox, to, volume, element, discretize, rings, vertices, simplexify, pointify, convexhull
+using CircularArrays: CircularArrays, CircularArray
 using GeoInterface
 using Tables
 using GeoJSON
-using GeoPlottingHelpers: GeoPlottingHelpers, with_settings, extract_latlon_coords, extract_latlon_coords!, geo_plotly_trace
+using GeoPlottingHelpers: GeoPlottingHelpers, with_settings, extract_latlon_coords, extract_latlon_coords!, geo_plotly_trace, to_raw_lonlat
 using Artifacts
 using Unitful: Unitful, ustrip, @u_str
 using PrecompileTools
 using NaturalEarth: NaturalEarth, naturalearth
-using CoordRefSystems
-using CoordRefSystems: Deg, Met
+using ScopedValues: ScopedValues, ScopedValue, with
 
-export extract_countries, SKIP_NONCONTINENTAL_EU, SkipFromAdmin, SimpleLatLon, LatLon, Point
+# Re-export form Meshes and CoordRefSystems
+export LatLon, Point
+
+include("types.jl")
+export CountryBorder, SimpleLatLon, SkipFromAdmin
+
+# These two constants are used to customize the default resolution of the geotable with borders and coastlines
+const DEFAULT_RESOLUTION = Ref{Int}(110)
+const RESOLUTION = ScopedValue{Union{Int, Nothing}}(nothing)
+
+include("helpers.jl")
 
 include("GeoTablesConversion.jl")
-using .GeoTablesConversion
-using .GeoTablesConversion: VALID_POINT, LATLON, CART, VALID_RING, GSET, POLY_CART, BOX_CART, POINT_LATLON, POINT_CART, MULTI_CART
-export CountryBorder
 
-const SimpleLatLon = LatLon
-const RegionBorders{T} = Union{CountryBorder{T}, DOMAIN{T}}
+include("countries_geotable.jl")
 
-include("geotable.jl")
+include("coastlines.jl")
+export get_coastlines
+
+# This file also defines `borders`
 include("meshes_interface.jl")
+
 include("skip_polyarea.jl")
+export SKIP_NONCONTINENTAL_EU
+
 include("implementation.jl")
+export extract_countries
+
 include("plot_coordinates.jl")
 export extract_plot_coords, extract_latlon_coords
 
+include("show.jl")
+
 @compile_workload begin
     table = get_geotable()
+    coastlines = get_coastlines()
     dmn = extract_countries("italy; spain")
     rome = SimpleLatLon(41.9, 12.49)
     rome in dmn # Returns true

@@ -6,8 +6,10 @@ floattype(::Type{<:Union{LATLON{T}, CART{T}}}) where T = T
 floattype(::Type{<:VALID_POINT{T}}) where T = T
 floattype(x) = floattype(typeof(x))
 
-to_raw_coords(c::Union{LATLON, CART}) = CoordRefSystems.raw(c)
-to_raw_coords(p::VALID_POINT) = to_raw_coords(coords(p))
+function to_raw_coords(x)
+    @warn "to_raw_coords is deprecated, use GeoPlottingHelpers.to_raw_lonlat instead (which is already a dependency of CountriesBorders)"
+    to_raw_lonlat(x)
+end
 
 to_cart_point(T::Type{<:Real}, p::POINT_CART) = convert(POINT_CART{T}, p)
 to_cart_point(T::Type{<:Real}, p::POINT_LATLON) = to_cart_point(T, Meshes.flat(p))
@@ -17,7 +19,7 @@ to_cart_point(x) = to_cart_point(floattype(x), x)
 
 to_latlon_point(T::Type{<:Real}, p::POINT_LATLON) = convert(POINT_LATLON{T}, p)
 function to_latlon_point(T::Type{<:Real}, p::POINT_CART) 
-    lon, lat = to_raw_coords(p)
+    lon, lat = to_raw_lonlat(p)
     return LATLON{T}(lat * u"°", lon * u"°") |> Point
 end
 to_latlon_point(T::Type{<:Real}, p::Union{LATLON, CART}) = to_latlon_point(T, Point(p))
@@ -115,3 +117,35 @@ change_geometry(crs::Union{Type{Cartesian}, Type{LatLon}}, x) = change_geometry(
 change_geometry(crs::Union{Type{Cartesian}, Type{LatLon}}) = Base.Fix1(change_geometry, crs)
 change_geometry(::Type{Cartesian}, ::Type{T}) where {T <: Real} = x -> change_geometry(Cartesian, T, x)
 change_geometry(::Type{LatLon}, ::Type{T}) where {T <: Real} = x -> change_geometry(LatLon, T, x)
+
+function check_resolution(resolution::Union{Nothing, Real}; force::Bool = false)
+    force && isnothing(resolution) && throw(ArgumentError("You can't force a computation without specifying the resolution"))
+    resolution = @something resolution RESOLUTION[] DEFAULT_RESOLUTION[]
+    resolution in (10, 50, 110) || throw(ArgumentError("The resolution can only be `nothing` or an integer value among `10`, `50` and `110`"))
+    return Int(resolution)
+end
+
+function remove_polyareas!(cb::CountryBorder, idx::Int)
+    (; valid_polyareas, latlon, cart, admin, resolution) = cb
+    ngeoms = length(valid_polyareas)
+    @assert idx ≤ ngeoms "You are trying to remove the $idx-th PolyArea from $(admin) but that country is only composed of $ngeoms PolyAreas for the considered resolution ($(resolution)m)."
+    if !valid_polyareas[idx] 
+        @info "The $idx-th PolyArea in $(admin) has already been removed"
+        return cb
+    end
+    @assert sum(valid_polyareas) > 1 "You can't remove all PolyAreas from a `CountryBorder` object"
+    # We find the idx while accounting for already removed polyareas
+    current_idx = @views sum(valid_polyareas[1:idx])
+    for g in (latlon, cart)
+        deleteat!(g.geoms, current_idx)
+    end
+    deleteat!(cb.bboxes, current_idx)
+    valid_polyareas[idx] = false
+    return cb
+end
+function remove_polyareas!(cb::CountryBorder, idxs)
+    for idx in idxs
+        remove_polyareas!(cb, idx)
+    end
+    return cb
+end

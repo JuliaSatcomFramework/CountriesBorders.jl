@@ -50,49 +50,57 @@ struct CountryBorder{T} <: Geometry{🌐,LATLON{T}}
     cart::MULTI_CART{T}
     "The bounding boxes of each polyarea within the country, mostly used for early filtering"
     bboxes::Vector{BOX_CART{T}}
-    function CountryBorder(admin::String, latlon::MULTI_LATLON{T}, valid_polyareas::BitVector; resolution::Int, table_idx::Int) where {T}
-        ngeoms = length(latlon.geoms)
-        sum(valid_polyareas) === ngeoms || error("The number of set bits in the `valid_polyareas` vector must be equivalent to the number of PolyAreas in the `geom` input argument")
-        cart = cartesian_geometry(latlon)
-        bboxes = map(boundingbox, parent(cart))
-        new{T}(admin, table_idx, valid_polyareas, resolution, latlon, cart, bboxes)
-    end
 end
-function CountryBorder(admin::AbstractString, geom::POLY_LATLON, valid_polyareas = BitVector((true,)); kwargs...)
-    multi = Multi([geom])
-    CountryBorder(String(admin), multi, BitVector(valid_polyareas); kwargs...)
-end
-function CountryBorder(admin::AbstractString, multi::MULTI_LATLON, valid_polyareas = BitVector(ntuple(i -> true, length(multi.geoms))); kwargs...)
-    CountryBorder(String(admin), multi, BitVector(valid_polyareas); kwargs...)
-end
-
-function remove_polyareas!(cb::CountryBorder, idx::Int)
-    (; valid_polyareas, latlon, cart, admin, resolution) = cb
-    ngeoms = length(valid_polyareas)
-    @assert idx ≤ ngeoms "You are trying to remove the $idx-th PolyArea from $(admin) but that country is only composed of $ngeoms PolyAreas for the considered resolution ($(resolution)m)."
-    if !valid_polyareas[idx] 
-        @info "The $idx-th PolyArea in $(admin) has already been removed"
-        return cb
-    end
-    @assert sum(valid_polyareas) > 1 "You can't remove all PolyAreas from a `CountryBorder` object"
-    # We find the idx while accounting for already removed polyareas
-    current_idx = @views sum(valid_polyareas[1:idx])
-    for g in (latlon, cart)
-        deleteat!(g.geoms, current_idx)
-    end
-    deleteat!(cb.bboxes, current_idx)
-    valid_polyareas[idx] = false
-    return cb
-end
-function remove_polyareas!(cb::CountryBorder, idxs)
-    for idx in idxs
-        remove_polyareas!(cb, idx)
-    end
-    return cb
-end
-
 
 const GSET{T} = GeometrySet{🌐, LATLON{T}, CountryBorder{T}}
 const SUBDOMAIN{T} = SubDomain{🌐, LATLON{T}, <:GSET{T}}
 const DOMAIN{T} = Union{GSET{T}, SUBDOMAIN{T}}
 
+const SimpleLatLon = LatLon # To Remove in next breaking
+const RegionBorders{T} = Union{CountryBorder{T}, DOMAIN{T}}
+
+"""
+    SkipFromAdmin(admin::AbstractString, idxs::AbstractVector{<:Integer})
+    SkipFromAdmin(admin::AbstractString, idx::Int)
+    SkipFromAdmin(admin::AbstractString, [::Colon])
+Structure used to specify parts of countries to skip when generating contours with [`extract_countries`](@ref).
+
+When instantiated with just a country name or with a name and an instance of the `Colon` (`:`), it will signal that the full country whose ADMIN name starts with `admin` (case sensitive) will be removed from the output of `extract_countries`.
+
+If created with an `admin` name and a list of integer indices, the polygons at the provided indices will be removed from the `MultiPolyArea` associated to country `admin` if this is present in the output of `extract_countries`.
+
+## Note
+The constructor does not perform any validation to verify that the provided `admin` exists or that the provided `idxs` are valid for indexing into the `MultiPolyArea` associated to the borders of `admin`.
+"""
+struct SkipFromAdmin
+    admin::String
+    idxs::Vector{Int}
+    function SkipFromAdmin(admin::AbstractString, idxs::Vector{Int}) 
+        @assert !isempty(idxs) "You can't initialize a SkipFromAdmin with an empty idxs vector as that represents skipping all PolyAreas. Call `SkipFromAdmin(admin, :)` if you want to explicitly skip all PolyAreas"
+        @assert minimum(idxs) > 0 "One of the provided idxs is lower than 1, this is not allowed."
+        sort!(idxs)
+        unique!(idxs)
+        new(String(admin), idxs)
+    end
+    SkipFromAdmin(admin::AbstractString, ::Colon) = new(String(admin), Int[])
+end
+
+const SkipDict = Dict{String, SkipFromAdmin}
+
+"""
+    CoastLines
+
+This structure holds the raw points of the coastlines at a given resolution.
+
+# Fields
+
+- `resolution::Int`: The resolution of the coastlines.
+- `raw_points::Vector{Vector{POINT_LATLON{Float32}}}`: The raw points of the coastlines.
+"""
+struct CoastLines
+    resolution::Int
+    raw_points::Vector{Vector{POINT_LATLON{Float32}}}
+end
+
+# Forwarding relevant meshes functions for the CountryBorder type
+const VALID_CRS = Type{<:Union{LatLon, Cartesian}}
