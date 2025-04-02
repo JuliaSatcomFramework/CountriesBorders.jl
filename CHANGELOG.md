@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+- Added a `resolution` keyword argument to `extract_countries` (only when not explicitly providing the `geotable` argument) to allow for different resolutions to be used for the extraction of countries.
+- Added the `get_coastlines` function 
+
+### Changed
+- Refactored the structure of the code, and now all types are defined in the toplevel module (though still accessible also from the GeoTablesConversion module)
+- Changed the way the default GeoTable for Countries Borders is stored internally. It is now stored inside a Dict
+
 ## [0.4.10] - 2025-04-01
 
 ### Changed

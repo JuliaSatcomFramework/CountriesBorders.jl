@@ -1,3 +1,21 @@
+## CountryBorder constructors ##
+function CountryBorder(admin::String, latlon::MULTI_LATLON{T}, valid_polyareas::BitVector; resolution::Int, table_idx::Int) where {T}
+    ngeoms = length(latlon.geoms)
+    sum(valid_polyareas) === ngeoms || error("The number of set bits in the `valid_polyareas` vector must be equivalent to the number of PolyAreas in the `geom` input argument")
+    cart = cartesian_geometry(latlon)
+    bboxes = map(boundingbox, parent(cart))
+    CountryBorder{T}(admin, table_idx, valid_polyareas, resolution, latlon, cart, bboxes)
+end
+
+function CountryBorder(admin::AbstractString, geom::POLY_LATLON, valid_polyareas = BitVector((true,)); kwargs...)
+    multi = Multi([geom])
+    CountryBorder(String(admin), multi, BitVector(valid_polyareas); kwargs...)
+end
+function CountryBorder(admin::AbstractString, multi::MULTI_LATLON, valid_polyareas = BitVector(ntuple(i -> true, length(multi.geoms))); kwargs...)
+    CountryBorder(String(admin), multi, BitVector(valid_polyareas); kwargs...)
+end
+##
+
 valid_column_names() = setdiff(Tables.columnnames(get_geotable()), [:geometry, :featurecla, :scalerank])
 
 possible_selector_values() =
@@ -50,8 +68,8 @@ end
 
 ## extract_countries ##
 """
-	extract_countries([geotable::GeoTables.GeoTable]; skip_areas = nothing, kwargs...)
-	extract_countries(admin::Union{AbstractString, Vector{<:AbstractString}}; skip_areas = nothing, kwargs...)
+	extract_countries([geotable::GeoTables.GeoTable]; resolution = nothing, skip_areas = nothing, kwargs...)
+	extract_countries(admin::Union{AbstractString, Vector{<:AbstractString}}; resolution = nothing, skip_areas = nothing, kwargs...)
 
 Extract and returns the domain (`<:Meshes.Domain`) containing all the countries
 that match a search query provided via the kwargs...
@@ -148,7 +166,8 @@ julia> Point(rome) in dmn # This returns true
 true
 ```
 """
-function extract_countries(geotable::GeoTables.GeoTable=get_geotable(), output_domain::Val{S}=Val{true}(); skip_areas=nothing, kwargs...) where {S}
+function extract_countries(geotable::GeoTables.GeoTable, ::Val{S}=Val{true}(); skip_areas=nothing, resolution = nothing, kwargs...) where {S}
+    isnothing(resolution) || throw(ArgumentError("The `resolution` keyword argument is not supported when providing a custom `geotable` argument"))
     downselection = falses(Tables.rowcount(geotable))
     for (k, v) in kwargs
         key = Symbol(uppercase(string(k)))
@@ -179,6 +198,6 @@ function extract_countries(geotable::GeoTables.GeoTable=get_geotable(), output_d
     end
 end
 # Method that just searches the admin column
-extract_countries(name::Union{AbstractString,Vector{<:AbstractString}}, output_domain::Val{S}=Val{true}(); kwargs...) where {S} = extract_countries(output_domain; admin=name, kwargs...)
+extract_countries(name::Union{AbstractString,Vector{<:AbstractString}}, output_domain::Val = Val{true}(); kwargs...) = extract_countries(output_domain; admin=name, kwargs...)
 # Method that provides just the Val
-extract_countries(output_domain::Val{S}; kwargs...) where {S} = extract_countries(get_geotable(), output_domain; kwargs...)
+extract_countries(output_domain::Val{S}; resolution = nothing, kwargs...) where {S} = extract_countries(get_geotable(; resolution), output_domain; kwargs...)

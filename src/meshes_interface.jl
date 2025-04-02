@@ -1,6 +1,3 @@
-# Forwarding relevant meshes functions for the CountryBorder type
-const VALID_CRS = Type{<:Union{LatLon, Cartesian}}
-
 # These are methods which are not really part of meshes
 
 borders(::Type{LatLon}, cb::CountryBorder) = cb.latlon
@@ -120,32 +117,4 @@ function Meshes.prettyname(d::GSET)
     T = floattype(d)
     res = resolution(d)
     "GeometrySet{CountryBorder{$T}}, resolution = $(res)m"
-end
-
-## IO ##
-function Base.summary(io::IO, cb::CountryBorder) 
-    print(io, cb.admin)
-    print(io, " Borders")
-end
-
-function Base.show(io::IO, cb::CountryBorder)
-    print(io, cb.admin)
-    nskipped = sum(!, cb.valid_polyareas)
-    if nskipped > 0
-        print(io, " ($nskipped skipped)")
-    end
-end
-
-function Base.show(io::IO, ::MIME"text/plain", cb::CountryBorder)
-    (; admin, valid_polyareas, latlon) = cb
-    print(io, admin)
-    print(io, ", $(floattype(cb)), $(resolution(cb))m")
-    nskipped = sum(!, valid_polyareas)
-    if nskipped > 0
-        print(io, ", $nskipped skipped")
-    end
-    println(io)
-    v = Any["Skipped PolyArea" for _ in 1:length(valid_polyareas)]
-    v[valid_polyareas] = latlon.geoms
-    printelms(io, v)
 end

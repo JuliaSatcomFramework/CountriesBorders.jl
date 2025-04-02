@@ -1,32 +1,16 @@
-"""
-    SkipFromAdmin(admin::AbstractString, idxs::AbstractVector{<:Integer})
-    SkipFromAdmin(admin::AbstractString, idx::Int)
-    SkipFromAdmin(admin::AbstractString, [::Colon])
-Structure used to specify parts of countries to skip when generating contours with [`extract_countries`](@ref).
-
-When instantiated with just a country name or with a name and an instance of the `Colon` (`:`), it will signal that the full country whose ADMIN name starts with `admin` (case sensitive) will be removed from the output of `extract_countries`.
-
-If created with an `admin` name and a list of integer indices, the polygons at the provided indices will be removed from the `MultiPolyArea` associated to country `admin` if this is present in the output of `extract_countries`.
-
-## Note
-The constructor does not perform any validation to verify that the provided `admin` exists or that the provided `idxs` are valid for indexing into the `MultiPolyArea` associated to the borders of `admin`.
-"""
-struct SkipFromAdmin
-    admin::String
-    idxs::Vector{Int}
-    function SkipFromAdmin(admin::AbstractString, idxs::Vector{Int}) 
-        @assert !isempty(idxs) "You can't initialize a SkipFromAdmin with an empty idxs vector as that represents skipping all PolyAreas. Call `SkipFromAdmin(admin, :)` if you want to explicitly skip all PolyAreas"
-        @assert minimum(idxs) > 0 "One of the provided idxs is lower than 1, this is not allowed."
-        sort!(idxs)
-        unique!(idxs)
-        new(String(admin), idxs)
-    end
-    SkipFromAdmin(admin::AbstractString, ::Colon) = new(String(admin), Int[])
-end
 SkipFromAdmin(admin, idxs::AbstractVector{<:Integer}) = SkipFromAdmin(admin, Int.(collect(idxs)))
 SkipFromAdmin(admin, idx::Int) = SkipFromAdmin(admin, [idx])
 SkipFromAdmin(admin::AbstractString) = SkipFromAdmin(admin, :)
 SkipFromAdmin(t::Tuple{<:AbstractString, <:Any}) = SkipFromAdmin(t...)
+
+# We pass through a Dict to enforce uniqueness of the skipped admin names
+mergeSkipDict(args...) = merge(map(skipDict, args)...)
+mergeSkipDict(v::AbstractVector) = mergeSkipDict(v...)
+
+skipDict(s::SkipFromAdmin) = SkipDict(s.admin => s)
+skipDict(d::SkipDict) = d
+skipDict(v::Vector{SkipFromAdmin}) = mergeSkipDict(v)
+skipDict(x) = SkipFromAdmin(x) |> skipDict
 
 skipall(s::SkipFromAdmin) = isempty(s.idxs)
 
@@ -47,8 +31,6 @@ function Base.merge!(a::SkipFromAdmin, bs::SkipFromAdmin...)
     return a
 end
 Base.merge(a::SkipFromAdmin, bs::SkipFromAdmin...) = merge!(deepcopy(a), bs...)
-
-const SkipDict = Dict{String, SkipFromAdmin}
 
 """
     validate_skipDict(d::SkipDict; geotable = get_geotable())
@@ -73,12 +55,6 @@ function validate_skipDict(d::SkipDict; geotable = get_geotable())
     end
 end
 
-# We pass through a Dict to enforce uniqueness of the skipped admin names
-skipDict(s::SkipFromAdmin) = SkipDict(s.admin => s)
-skipDict(d::SkipDict) = d
-skipDict(v::Vector{SkipFromAdmin}) = mergeSkipDict(v)
-skipDict(x) = SkipFromAdmin(x) |> skipDict
-
 # Taken basically from Base.merge(d::AbstractDict, others::AbstractDict...)
 function Base.merge!(d::SkipDict, others::SkipDict...)
         for other in others
@@ -95,9 +71,6 @@ function Base.merge!(d::SkipDict, others::SkipDict...)
     end
     return d
 end
-
-mergeSkipDict(args...) = merge(map(skipDict, args)...)
-mergeSkipDict(v::AbstractVector) = mergeSkipDict(v...)
 
 # We create a function to skip non continental EU polyareas
 const SKIP_NONCONTINENTAL_EU = [
