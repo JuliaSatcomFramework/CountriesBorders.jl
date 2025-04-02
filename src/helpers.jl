@@ -6,8 +6,10 @@ floattype(::Type{<:Union{LATLON{T}, CART{T}}}) where T = T
 floattype(::Type{<:VALID_POINT{T}}) where T = T
 floattype(x) = floattype(typeof(x))
 
-to_raw_coords(c::Union{LATLON, CART}) = CoordRefSystems.raw(c)
-to_raw_coords(p::VALID_POINT) = to_raw_coords(coords(p))
+function to_raw_coords(x)
+    @warn "to_raw_coords is deprecated, use GeoPlottingHelpers.to_raw_lonlat instead (which is already a dependency of CountriesBorders)"
+    to_raw_lonlat(x)
+end
 
 to_cart_point(T::Type{<:Real}, p::POINT_CART) = convert(POINT_CART{T}, p)
 to_cart_point(T::Type{<:Real}, p::POINT_LATLON) = to_cart_point(T, Meshes.flat(p))
@@ -17,7 +19,7 @@ to_cart_point(x) = to_cart_point(floattype(x), x)
 
 to_latlon_point(T::Type{<:Real}, p::POINT_LATLON) = convert(POINT_LATLON{T}, p)
 function to_latlon_point(T::Type{<:Real}, p::POINT_CART) 
-    lon, lat = to_raw_coords(p)
+    lon, lat = to_raw_lonlat(p)
     return LATLON{T}(lat * u"°", lon * u"°") |> Point
 end
 to_latlon_point(T::Type{<:Real}, p::Union{LATLON, CART}) = to_latlon_point(T, Point(p))

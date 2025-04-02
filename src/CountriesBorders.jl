@@ -8,7 +8,7 @@ using CircularArrays: CircularArrays, CircularArray
 using GeoInterface
 using Tables
 using GeoJSON
-using GeoPlottingHelpers: GeoPlottingHelpers, with_settings, extract_latlon_coords, extract_latlon_coords!, geo_plotly_trace
+using GeoPlottingHelpers: GeoPlottingHelpers, with_settings, extract_latlon_coords, extract_latlon_coords!, geo_plotly_trace, to_raw_lonlat
 using Artifacts
 using Unitful: Unitful, ustrip, @u_str
 using PrecompileTools
