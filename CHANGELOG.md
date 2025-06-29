@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.4.13] - 2025-06-29
+
+### Added 
+- Added a new abstract type `FastInRegion` which represents all types for which our custom point inclusion algorithm (based on `in_exit_early`) should work
+  - This is mostly added to simplify defining custom regions in downstream packages without requiring to define a custom `Base.in` method for every new type.
+
+## [0.4.12] - 2025-04-02
+
+### Fixed
+- Fix missing import which caused erroring in 0.4.11
+
 ## [0.4.11] - 2025-04-02
 
 ### Added
