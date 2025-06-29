@@ -19,7 +19,7 @@ using ScopedValues: ScopedValues, ScopedValue, with
 export LatLon, Point
 
 include("types.jl")
-export CountryBorder, SimpleLatLon, SkipFromAdmin
+export CountryBorder, SimpleLatLon, SkipFromAdmin, FastInRegion
 
 # These two constants are used to customize the default resolution of the geotable with borders and coastlines
 const DEFAULT_RESOLUTION = Ref{Int}(110)

@@ -19,6 +19,20 @@ const BOX_LATLON{T} = Box{🌐, LATLON{T}}
 const BOX_CART{T} = Box{𝔼{2}, CART{T}}
 
 """
+    FastInRegion{T} <: Geometry{🌐,LATLON{T}}
+
+Abstract type identifying regions where a fast custom algorithm for checking point inclusion in region is available. 
+
+Subtypes of `FastInRegion` are expected to support support the `CountriesBorders.in_exit_early` function.
+For most types, the default implementation is sufficient and translates into having a working method for the following two functions defined in CountriesBorders.jl:
+- `polyareas`
+- `bboxes`
+
+See also [`CountriesBorders.in_exit_early`](@ref), [`CountriesBorders.polyareas`](@ref), [`CountriesBorders.bboxes`](@ref).
+"""
+abstract type FastInRegion{T} <: Geometry{🌐,LATLON{T}} end
+
+"""
     CountryBorder{T} <: Geometry{🌐,LATLON{T}}
 
 Structure representings the coordinates of the borders of a country (based on the NaturalEarth database). 
@@ -35,7 +49,7 @@ This structure holds the borders in both LatLon and Cartesian2D, to allow faster
 - `latlon::MULTI_LATLON{T}`: The borders in LatLon CRS.
 - `cart::MULTI_LATLON{T}`: The borders in Cartesian2D CRS.
 """
-struct CountryBorder{T} <: Geometry{🌐,LATLON{T}}
+struct CountryBorder{T} <: FastInRegion{T}
     "Name of the Country, i.e. the ADMIN entry in the GeoTable"
     admin::String
     "The index of the country in the original GeoTable"
@@ -57,7 +71,7 @@ const SUBDOMAIN{T} = SubDomain{🌐, LATLON{T}, <:GSET{T}}
 const DOMAIN{T} = Union{GSET{T}, SUBDOMAIN{T}}
 
 const SimpleLatLon = LatLon # To Remove in next breaking
-const RegionBorders{T} = Union{CountryBorder{T}, DOMAIN{T}}
+const RegionBorders{T} = Union{FastInRegion{T}, DOMAIN{T}}
 
 """
     SkipFromAdmin(admin::AbstractString, idxs::AbstractVector{<:Integer})
