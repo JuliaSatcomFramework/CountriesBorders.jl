@@ -7,7 +7,18 @@ borders(x) = borders(LatLon, x)
 resolution(cb::CountryBorder) = cb.resolution
 resolution(d::DOMAIN) = resolution(element(d, 1))
 
-# This should return a vector of POLY_CART elements, mostly to be used with in_exit_early
+"""
+    polyareas(region)
+
+Returns an iterable of the cartesian polygons (`<:POLY_CART`) associated to the provided `region`.
+
+This function is mainly used in the implementation of the custom fast point inclusion algorithm in [`CountriesBorders.in_exit_early`](@ref).
+
+!!! note
+    This function is not part of the package's public API and might be subject to change in future versions. When made public, this will most likely follow the signature of `borders` with 2 arguments where the first can be either `LatLon` or `Cartesian`.
+
+See also [`CountriesBorders.in_exit_early`](@ref), [`CountriesBorders.bboxes`](@ref).
+"""
 polyareas(x) = polyareas(borders(Cartesian, x))
 polyareas(v::Vector{<:POLY_CART}) = v
 polyareas(x::MULTI_CART) = parent(x)
@@ -27,7 +38,18 @@ function polyareas(b::BOX_CART)
 end
 polyareas(dmn::DOMAIN) = Iterators.flatten(polyareas(el) for el in dmn)
 
-# This should return the cartesian bounding boxes for the polyareas of x, mostly to be used with in_exit_early
+"""
+    bboxes(region)
+
+Returns an iterable of the cartesian bounding boxes (`<:BBOX_CART`) associated to the provided `region`.
+
+This function is mainly used in the implementation of the custom fast point inclusion algorithm in [`CountriesBorders.in_exit_early`](@ref).
+
+!!! note
+    This function is not part of the package's public API and might be subject to change in future versions. When made public, this will most likely follow the signature of `borders` with 2 arguments where the first can be either `LatLon` or `Cartesian`.
+
+See also [`CountriesBorders.in_exit_early`](@ref), [`CountriesBorders.polyareas`](@ref).
+"""
 bboxes(x) = map(boundingbox, polyareas(x))
 bboxes(b::BOX_CART) = (b,)
 bboxes(cb::CountryBorder) = cb.bboxes
@@ -93,7 +115,7 @@ Base.parent(crs::VALID_CRS, cb::CountryBorder) = parent(borders(crs, cb))
     in_exit_early(p, polys, bboxes)
 Function that checks if a point is contained one of the polyareas in vector `polys` which are associated to the bounding boxes in vector `bboxes`.
 
-Both `polys` and `bboxes` must be vectors of the same size, with element type `POLY_CART` and `BBOX_CART` respectively.
+Both `polys` and `bboxes` must be iterables of the same size, with element type `POLY_CART` and `BBOX_CART` respectively.
 
 This function is basically pre-filtering points by checking inclusion in the bounding box which is significantly faster than checking for the polyarea itself.
 """
