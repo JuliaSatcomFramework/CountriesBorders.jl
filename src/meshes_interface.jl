@@ -120,7 +120,7 @@ Both `polys` and `bboxes` must be iterables of the same size, with element type 
 This function is basically pre-filtering points by checking inclusion in the bounding box which is significantly faster than checking for the polyarea itself.
 """
 function in_exit_early(p, polys, bboxes)
-    T = first(polys) |> floattype
+    T = first(polys) |> valuetype
     p = to_cart_point(T, p)
     for (poly, box) in zip(polys, bboxes)
         p in box || continue
@@ -136,7 +136,7 @@ Base.in(p::LATLON, dmn::Union{DOMAIN, CountryBorder}) = in(Point(p), dmn)
 
 # IO related
 function Meshes.prettyname(d::GSET) 
-    T = floattype(d)
+    T = valuetype(d)
     res = resolution(d)
     "GeometrySet{CountryBorder{$T}}, resolution = $(res)m"
 end

@@ -15,7 +15,7 @@ end
 function Base.show(io::IO, ::MIME"text/plain", cb::CountryBorder)
     (; admin, valid_polyareas, latlon) = cb
     print(io, admin)
-    print(io, ", $(floattype(cb)), $(resolution(cb))m")
+    print(io, ", $(valuetype(cb)), $(resolution(cb))m")
     nskipped = sum(!, valid_polyareas)
     if nskipped > 0
         print(io, ", $nskipped skipped")

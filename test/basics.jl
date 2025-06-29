@@ -1,6 +1,6 @@
 @testsnippet setup_basic begin
     using CountriesBorders
-    using CountriesBorders: possible_selector_values, valid_column_names, mergeSkipDict, validate_skipDict, skipall, SkipDict, skipDict, get_geotable, extract_plot_coords, borders, remove_polyareas!, floattype, to_cart_point, change_geometry, Cartesian, in_exit_early, polyareas, latlon_geometry, cartesian_geometry, floattype, to_latlon_point
+    using CountriesBorders: possible_selector_values, valid_column_names, mergeSkipDict, validate_skipDict, skipall, SkipDict, skipDict, get_geotable, extract_plot_coords, borders, remove_polyareas!, valuetype, to_cart_point, change_geometry, Cartesian, in_exit_early, polyareas, latlon_geometry, cartesian_geometry, to_latlon_point
     using CountriesBorders.GeoTablesConversion: POINT_CART, POINT_LATLON, POLY_LATLON, POLY_CART, BOX_LATLON, BOX_CART
     using Meshes
     using CoordRefSystems
@@ -125,7 +125,7 @@ end
     @test npolyareas(italy) == 2
     @test_logs (:info, r"has already been removed") remove_polyareas!(italy, 1)
 
-    @test floattype(italy) == Float32
+    @test valuetype(italy) == Float32
 
     # Show methods
     @test sprint(summary, italy) == "Italy Borders"
