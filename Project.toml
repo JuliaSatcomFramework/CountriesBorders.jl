@@ -1,10 +1,11 @@
 name = "CountriesBorders"
 uuid = "ee40d4b5-31c3-4fe2-b6cc-5ac7adf7f414"
-authors = ["Alberto Mengali <disberd@gmail.com>"]
 version = "0.4.13"
+authors = ["Alberto Mengali <disberd@gmail.com>"]
 
 [deps]
 Artifacts = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
+BasicTypes = "13e19751-ccd1-416d-be0c-a6724a8caa31"
 CircularArrays = "7a955b69-7140-5f4e-a0ed-f168c5e2e749"
 CoordRefSystems = "b46f11dc-f210-4604-bfba-323c1ec968cb"
 GeoInterface = "cf35fbd7-0cd7-5166-be24-54bfbe79505f"
@@ -26,13 +27,14 @@ PlotlyBaseExt = "PlotlyBase"
 
 [compat]
 Artifacts = "1"
+BasicTypes = "1.12.0"
 CircularArrays = "1.4.0"
-CoordRefSystems = "0.13, 0.14, 0.15, 0.16, 0.17"
+CoordRefSystems = "0.16 - 0.18"
 GeoInterface = "1"
 GeoJSON = "0.8"
 GeoPlottingHelpers = "0.1.2"
 GeoTables = "1"
-Meshes = "0.50, 0.51, 0.52, 0.53"
+Meshes = "0.51 - 0.53"
 NaturalEarth = "0.1"
 PlotlyBase = "0.8"
 PrecompileTools = "1"

@@ -1,7 +1,7 @@
 @testsnippet InterfacesSetup begin
     using Meshes
     using CountriesBorders
-    using CountriesBorders: borders, bboxes, polyareas, floattype, to_cart_point
+    using CountriesBorders: borders, bboxes, polyareas, valuetype, to_cart_point
     using CoordRefSystems
     using Test
 end
@@ -31,7 +31,7 @@ end
     using CountriesBorders: in_exit_early, Cartesian, borders, DOMAIN, to_cart_point
     dmn = extract_countries("*")
     # Add consistency checks with the standard `in` method not doing exit early
-    _in(p, cb::CountryBorder) = in(to_cart_point(floattype(cb), p), borders(Cartesian, cb))
+    _in(p, cb::CountryBorder) = in(to_cart_point(valuetype(cb), p), borders(Cartesian, cb))
     _in(p, dm::DOMAIN) = any(_in(p, e) for e in dm)
 
     @test all(1:100) do _
@@ -51,7 +51,7 @@ end
     @test bboxes(b) |> first === b
 end
 
-@testitem "floattype" setup=[InterfacesSetup] begin
+@testitem "valuetype" setup=[InterfacesSetup] begin
     dmn = extract_countries(;continent = "Europe")
     cb = element(dmn, 1)
     brdlat = borders(LatLon, cb)
@@ -59,10 +59,10 @@ end
     p = rand(Point; crs = LatLon)
     ll = rand(LatLon)
     @test all((dmn, cb, brdlat, brdcart)) do el
-        floattype(el) == Float32
+        valuetype(el) == Float32
     end
     @test all((p, ll)) do el
-        floattype(el) == Float64
+        valuetype(el) == Float64
     end
 end
 

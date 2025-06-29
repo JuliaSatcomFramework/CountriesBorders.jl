@@ -1,30 +1,30 @@
-floattype(::Type{<:CountryBorder{T}}) where {T} = T
-floattype(::Type{<:DOMAIN{T}}) where {T} = T
-floattype(::Type{<:Geometry{🌐,LATLON{T}}}) where T = T
-floattype(::Type{<:Geometry{𝔼{2},CART{T}}}) where T = T
-floattype(::Type{<:Union{LATLON{T}, CART{T}}}) where T = T
-floattype(::Type{<:VALID_POINT{T}}) where T = T
-floattype(x) = floattype(typeof(x))
+BasicTypes.valuetype(::Type{<:CountryBorder{T}}) where {T} = return T
+BasicTypes.valuetype(::Type{<:DOMAIN{T}}) where {T} = return T
+BasicTypes.valuetype(::Type{<:Geometry{🌐,LATLON{T}}}) where T = return T
+BasicTypes.valuetype(::Type{<:Geometry{𝔼{2},CART{T}}}) where T = return T
+BasicTypes.valuetype(::Type{<:Union{LATLON{T}, CART{T}}}) where T = return T
+BasicTypes.valuetype(::Type{<:VALID_POINT{T}}) where T = return T
 
 function to_raw_coords(x)
     @warn "to_raw_coords is deprecated, use GeoPlottingHelpers.to_raw_lonlat instead (which is already a dependency of CountriesBorders)"
     to_raw_lonlat(x)
 end
 
-to_cart_point(T::Type{<:Real}, p::POINT_CART) = convert(POINT_CART{T}, p)
-to_cart_point(T::Type{<:Real}, p::POINT_LATLON) = to_cart_point(T, Meshes.flat(p))
-to_cart_point(T::Type{<:Real}, p::Union{LATLON, CART}) = to_cart_point(T, Point(p))
-to_cart_point(T::Type{<:Real}) = Base.Fix1(to_cart_point, T)
-to_cart_point(x) = to_cart_point(floattype(x), x)
 
-to_latlon_point(T::Type{<:Real}, p::POINT_LATLON) = convert(POINT_LATLON{T}, p)
-function to_latlon_point(T::Type{<:Real}, p::POINT_CART) 
-    lon, lat = to_raw_lonlat(p)
-    return LATLON{T}(lat * u"°", lon * u"°") |> Point
+function to_cart_point(T::Type{<:AbstractFloat}, p)
+    lon, lat = to_raw_lonlat(p) .|> T
+    return Cartesian{WGS84Latest}(lon, lat) |> Point
 end
-to_latlon_point(T::Type{<:Real}, p::Union{LATLON, CART}) = to_latlon_point(T, Point(p))
-to_latlon_point(T::Type{<:Real}) = Base.Fix1(to_latlon_point, T)
-to_latlon_point(x) = to_latlon_point(floattype(x), x)
+
+function to_latlon_point(T::Type{<:AbstractFloat}, p)
+    lon, lat = to_raw_lonlat(p) .|> T
+    return LatLon{WGS84Latest}(lat, lon) |> Point
+end
+
+for name in (:to_cart_point, :to_latlon_point)
+    @eval $name(T::Type{<:AbstractFloat}) = Base.Fix1($name, T)
+    @eval $name(x) = $name(valuetype(x), x)
+end
 
 
 """
@@ -60,7 +60,7 @@ function cartesian_geometry(T::Type{<:Real}, multi::Union{MULTI_LATLON, MULTI_CA
     map(cartesian_geometry(T), parent(multi)) |> Multi
 end
 cartesian_geometry(T::Type{<:Real}) = Base.Fix1(cartesian_geometry, T)
-cartesian_geometry(x) = cartesian_geometry(floattype(x), x)
+cartesian_geometry(x) = cartesian_geometry(valuetype(x), x)
 
 """
     latlon_geometry([T::Type{<:Real}, ] geom)
@@ -96,7 +96,7 @@ function latlon_geometry(T::Type{<:Real}, multi::Union{MULTI_LATLON, MULTI_CART}
     map(latlon_geometry(T), parent(multi)) |> Multi
 end
 latlon_geometry(T::Type{<:Real}) = Base.Fix1(latlon_geometry, T)
-latlon_geometry(x) = latlon_geometry(floattype(x), x)
+latlon_geometry(x) = latlon_geometry(valuetype(x), x)
 
 
 """
@@ -113,7 +113,7 @@ The last method only taking `Cartesian` or `LatLon` as input (and optionally the
 """
 change_geometry(::Type{Cartesian}, T::Type{<:Real}, x) = cartesian_geometry(T, x)
 change_geometry(::Type{LatLon}, T::Type{<:Real}, x) = latlon_geometry(T, x)
-change_geometry(crs::Union{Type{Cartesian}, Type{LatLon}}, x) = change_geometry(crs, floattype(x), x)
+change_geometry(crs::Union{Type{Cartesian}, Type{LatLon}}, x) = change_geometry(crs, valuetype(x), x)
 change_geometry(crs::Union{Type{Cartesian}, Type{LatLon}}) = Base.Fix1(change_geometry, crs)
 change_geometry(::Type{Cartesian}, ::Type{T}) where {T <: Real} = x -> change_geometry(Cartesian, T, x)
 change_geometry(::Type{LatLon}, ::Type{T}) where {T <: Real} = x -> change_geometry(LatLon, T, x)
