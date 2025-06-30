@@ -131,8 +131,7 @@ end
 # This is a catchall method for extension for other types
 in_exit_early(p, x) = in_exit_early(p, polyareas(x), bboxes(x))
 
-Base.in(p::VALID_POINT, cb::CountryBorder) = in_exit_early(p, cb)
-Base.in(p::LATLON, dmn::Union{DOMAIN, CountryBorder}) = in(Point(p), dmn)
+Base.in(p::Union{VALID_POINT, LATLON}, d::RegionBorders) = in_exit_early(p, d)
 
 # IO related
 function Meshes.prettyname(d::GSET) 
