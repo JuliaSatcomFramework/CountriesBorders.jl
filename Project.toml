@@ -27,7 +27,7 @@ PlotlyBaseExt = "PlotlyBase"
 
 [compat]
 Artifacts = "1"
-BasicTypes = "1.12.0"
+BasicTypes = "1.13.0"
 CircularArrays = "1.4.0"
 CoordRefSystems = "0.16 - 0.18"
 GeoInterface = "1"

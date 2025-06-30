@@ -67,7 +67,7 @@ struct CountryBorder{T} <: FastInRegion{T}
 end
 
 const GSET{T} = GeometrySet{🌐, LATLON{T}, CountryBorder{T}}
-const SUBDOMAIN{T} = SubDomain{🌐, LATLON{T}, <:GSET{T}}
+const SUBDOMAIN{T} = SubDomain{🌐, LATLON{T}, GSET{T}}
 const DOMAIN{T} = Union{GSET{T}, SUBDOMAIN{T}}
 
 const SimpleLatLon = LatLon # To Remove in next breaking
