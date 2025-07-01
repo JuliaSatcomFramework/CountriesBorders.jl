@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-## [0.4.13] - 2025-06-29
+## [0.4.13] - 2025-06-31
 
 ### Added 
 - Added a new abstract type `FastInRegion` which represents all types for which our custom point inclusion algorithm (based on `in_exit_early`) should work
@@ -18,6 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The internal function (`floattype`) to extract floating point type for types defined by CountriesBorders has been replaced by `BasicTypes.valuetype`
 - Make the default method for internal `to_cart_point` and `to_latlon_point` rely on `GeoPlottingHelpers.to_raw_lonlat` for simpler extension in downstream packages
 - Make internal functions relying on JuliaEarth ecosystem more consistent with the public API (we still rely on some internals)
+
+### Fixed
+- The accepted `valuetype` as input to `latlon_geometry`, `cartesian_geometry` and `change_geometry` is `<:AbstractFloat` rather than `<:Real` to be consistent with the Meshes API
 
 ## [0.4.12] - 2025-04-02
 
