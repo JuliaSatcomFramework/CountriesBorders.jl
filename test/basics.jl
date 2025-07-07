@@ -1,7 +1,8 @@
 @testsnippet setup_basic begin
     using CountriesBorders
-    using CountriesBorders: possible_selector_values, valid_column_names, mergeSkipDict, validate_skipDict, skipall, SkipDict, skipDict, get_geotable, extract_plot_coords, borders, remove_polyareas!, valuetype, to_cart_point, change_geometry, Cartesian, in_exit_early, polyareas, latlon_geometry, cartesian_geometry, to_latlon_point
-    using CountriesBorders.GeoTablesConversion: POINT_CART, POINT_LATLON, POLY_LATLON, POLY_CART, BOX_LATLON, BOX_CART
+    using CountriesBorders: possible_selector_values, valid_column_names, mergeSkipDict, validate_skipDict, skipall, SkipDict, skipDict, get_geotable, remove_polyareas!
+    using CountriesBorders.BasicTypes: valuetype
+    using CountriesBorders.GeoBasics: POINT_CART, POINT_LATLON, POLY_LATLON, POLY_CART, BOX_LATLON, BOX_CART, latlon_geometry, cartesian_geometry, to_latlon_point, to_cart_point, polyareas
     using Meshes
     using CoordRefSystems
     using Test
@@ -107,18 +108,12 @@ end
     merge!(sfa, SkipFromAdmin("France", 2), SkipFromAdmin("France", 3))
     @test sfb.idxs == sfa.idxs
 
-    @test to_cart_point(LatLon(0, 0)) isa POINT_CART{Float64}
-    poly = map([(-1,-1), (-1, 1), (1, 1), (1, -1)]) do p 
-        LatLon(p...) |> Point
-    end |> PolyArea |> change_geometry(Cartesian)
-    @test in_exit_early(LatLon(0,0), poly)
-
     # We test that 50m resolution has more polygons than the default 110m one
     @test length(get_geotable(;resolution = 50).geometry) > length(get_geotable().geometry)
     @test length(get_geotable(;resolution = 10).geometry) > length(get_geotable(;resolution = 50).geometry)
 
     italy = extract_countries("italy") |> only
-    npolyareas(x) = length(polyareas(x))
+    npolyareas(x) = length(polyareas(Cartesian, x))
     @test LatLon(41.9, 12.49) in italy
     @test npolyareas(italy) == 3
     remove_polyareas!(italy, 1)
