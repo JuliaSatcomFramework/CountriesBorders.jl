@@ -17,24 +17,22 @@ This is a new package which defines more consistently an interface for exploitin
 - Added a dependency on BasicTypes
 - Added a dependency on GeoBasics
 
-### Deprecated
-- The following internal functions are now deprecatedand will be removed in a future version. They now print a warning and forward to the equivalent function from `GeoBasics.jl`, with suggested modification for users as follows: 
-  - `borders`: To be now changed accordingly:
-    - `borders(crs, cb)` to `GeoBasics.to_multi(crs, cb)` 
-    - `borders(cb)` to `GeoBasics.to_multi(LatLon, cb)`
-  - `polyareas`: To be now changed from `polyareas(x)` to `GeoBasics.polyareas(Cartesian, x)`
-  - `bboxes`: To be now changed from `bboxes(x)` to `GeoBasics.bboxes(Cartesian, x)`
-
 ### Removed
-- The following internal functions have been removed from CountriesBorders as they are now defined in `GeoBasics`:
+- The following internal functions have been removed from CountriesBorders as they are now defined in `GeoBasics` (either directly or with alternative name but similar functionality):
   - `in_exit_early`
   - `to_cart_point`
   - `to_latlon_point`
   - `to_cartesian_geometry`
   - `to_latlon_geometry`
+  - `borders`: This should be replaced with `GeoBasics.to_multi` for most cases and by explicitly providing the CRS as first argument.
+  - `polyareas`: This should be replaced with `GeoBasics.polyareas(Cartesian, geom)`
+  - `bboxes`: This should be replaced with `GeoBasics.bboxes(Cartesian, geom)`
 - All the type aliases for Meshes.jl types (e.g. LATLON, POINT_LATON) have been removed from this package as they are now defined in `GeoBasics.jl`.
 - The internal `floattype` function has been removed and has been replaced with `BasicTypes.valuetype`
 - The `SimpleLatLon` type/function has been removed as it was already deprecated.
+- The `to_raw_coords` and `extract_plot_coords` have been removed as they were already deprecated since they were moved to `GeoPlottingHelpers.jl`
+- Removed the `RegionBorders` type alias, as it is now either `GeoBasics.FastInGeometry` or `GeoBasics.VALID_DOMAINS`
+- Removed the `PlotlyBase` extension (and consequently the `scattergeo` method) as downstream packages should now rely on using the `GeoPlottingHelpers.geo_plotly_trace` function.
 
 ### Changed
 - The fields of the `CountryBorder` type have been changed, and now store a `GeoBasics.GeoBorders` field to represents the borders as opposed to the previous three fields `latlon`, `cart` and `bboxes`

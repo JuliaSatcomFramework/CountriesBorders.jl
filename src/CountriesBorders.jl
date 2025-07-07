@@ -1,7 +1,7 @@
 module CountriesBorders
 
 using BasicTypes: BasicTypes, valuetype
-using GeoBasics: GeoBasics, FastInGeometry, FastInDomain, GeoBorders, VALID_CRS, to_multi, geoborders, LATLON
+using GeoBasics: GeoBasics, FastInGeometry, FastInDomain, GeoBorders, VALID_CRS, to_multi, geoborders, LATLON, polyareas, to_gset
 using GeoTables
 using CoordRefSystems: CoordRefSystems, LatLon, Cartesian2D, WGS84Latest, Deg, Met, Cartesian
 using Meshes: Meshes, Geometry, CRS, 🌐, Multi, 𝔼, Point, MultiPolygon, printelms, Ring, PolyArea, Box, GeometrySet, SubDomain, Domain

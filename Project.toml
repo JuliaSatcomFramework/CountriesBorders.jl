@@ -23,9 +23,6 @@ Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 [weakdeps]
 PlotlyBase = "a03496cd-edff-5a9b-9e67-9cda94a718b5"
 
-[extensions]
-PlotlyBaseExt = "PlotlyBase"
-
 [compat]
 Artifacts = "1"
 BasicTypes = "1.13.0"
@@ -38,7 +35,6 @@ GeoPlottingHelpers = "0.1.2"
 GeoTables = "1"
 Meshes = "0.51 - 0.53"
 NaturalEarth = "0.1"
-PlotlyBase = "0.8"
 PrecompileTools = "1"
 ScopedValues = "1.3.0"
 Tables = "1"
