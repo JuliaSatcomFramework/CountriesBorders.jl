@@ -13,7 +13,7 @@ function Base.show(io::IO, cb::CountryBorder)
 end
 
 function Base.show(io::IO, ::MIME"text/plain", cb::CountryBorder)
-    (; admin, valid_polyareas, latlon) = cb
+    (; admin, valid_polyareas) = cb
     print(io, admin)
     print(io, ", $(valuetype(cb)), $(resolution(cb))m")
     nskipped = sum(!, valid_polyareas)
@@ -22,8 +22,15 @@ function Base.show(io::IO, ::MIME"text/plain", cb::CountryBorder)
     end
     println(io)
     v = Any["Skipped PolyArea" for _ in 1:length(valid_polyareas)]
-    v[valid_polyareas] = latlon.geoms
+    v[valid_polyareas] = polyareas(LatLon, cb)
     printelms(io, v)
+end
+
+# GSET
+function Meshes.prettyname(d::GSET) 
+    T = valuetype(d)
+    res = resolution(d)
+    "GeometrySet{CountryBorder{$T}}, resolution = $(res)m"
 end
 
 # CoastLines

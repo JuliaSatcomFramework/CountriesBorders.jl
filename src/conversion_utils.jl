@@ -101,7 +101,9 @@ function asgeotable(table; resolution)
   geoms = Tables.getcolumn(cols, gcol)
   admins = Tables.getcolumn(cols, :ADMIN)
   countries = map(geoms, admins, eachindex(geoms)) do geom, admin, table_idx
-    CountryBorder(admin, geom2meshes(geom); table_idx, resolution)
+    borders = GeoBorders(geom2meshes(geom))
+    valid_polyareas = trues(length(polyareas(LatLon, borders)))
+    CountryBorder(admin, borders, valid_polyareas; table_idx, resolution)
   end
   domain = GeometrySet(countries)
   georef(table, domain)
