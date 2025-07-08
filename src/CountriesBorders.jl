@@ -46,7 +46,6 @@ include("implementation.jl")
 export extract_countries
 
 include("plot_coordinates.jl")
-export extract_plot_coords, extract_latlon_coords
 
 include("show.jl")
 
