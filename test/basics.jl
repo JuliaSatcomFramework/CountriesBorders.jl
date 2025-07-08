@@ -2,7 +2,7 @@
     using CountriesBorders
     using CountriesBorders: possible_selector_values, valid_column_names, mergeSkipDict, validate_skipDict, skipall, SkipDict, skipDict, get_geotable, remove_polyareas!
     using CountriesBorders.BasicTypes: valuetype
-    using CountriesBorders.GeoBasics: POINT_CART, POINT_LATLON, POLY_LATLON, POLY_CART, BOX_LATLON, BOX_CART, latlon_geometry, cartesian_geometry, to_latlon_point, to_cart_point, polyareas
+    using CountriesBorders.GeoBasics: POINT_CART, POINT_LATLON, POLY_LATLON, POLY_CART, BOX_LATLON, BOX_CART, latlon_geometry, cartesian_geometry, to_latlon_point, to_cartesian_point, polyareas
     using Meshes
     using CoordRefSystems
     using Test

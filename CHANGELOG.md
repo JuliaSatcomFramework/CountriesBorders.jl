@@ -20,7 +20,7 @@ This is a new package which defines more consistently an interface for exploitin
 ### Removed
 - The following internal functions have been removed from CountriesBorders as they are now defined in `GeoBasics` (either directly or with alternative name but similar functionality):
   - `in_exit_early`
-  - `to_cart_point`
+  - `to_cartesian_point`
   - `to_latlon_point`
   - `to_cartesian_geometry`
   - `to_latlon_geometry`
@@ -96,10 +96,10 @@ This release has some breaking changes to internal functions, but as these were 
     - `latlon_geometry`
     - `cartesian_geometry`
     - `change_geometry`
-    - `to_cart_point`
+    - `to_cartesian_point`
 
 ### Added
-New internal function `to_latlon_point` which mirrors `to_cart_point` but for the output in LatLon crs.
+New internal function `to_latlon_point` which mirrors `to_cartesian_point` but for the output in LatLon crs.
 
 ## [0.4.5] - 2025-03-08
 

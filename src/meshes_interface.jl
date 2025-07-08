@@ -32,7 +32,3 @@ Meshes.pointify(crs::VALID_CRS, cb::CountryBorder) = pointify(to_multi(crs, cb))
 Meshes.pointify(cb::CountryBorder) = pointify(Cartesian, cb)
 
 Meshes.convexhull(m::CountryBorder) = convexhull(to_multi(Cartesian, m))
-
-# Base methods
-Base.parent(crs::VALID_CRS, cb::CountryBorder) = parent(to_multi(crs, cb))
-Base.parent(cb::CountryBorder) = parent(LatLon, cb)
