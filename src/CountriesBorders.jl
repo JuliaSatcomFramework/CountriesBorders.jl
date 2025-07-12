@@ -5,8 +5,7 @@ using GeoBasics: GeoBasics, FastInGeometry, FastInDomain, GeoBorders, VALID_CRS,
 using GeoTables
 using CoordRefSystems: CoordRefSystems, LatLon, Cartesian2D, WGS84Latest, Deg, Met, Cartesian
 using Meshes: Meshes, Geometry, CRS, 🌐, Multi, 𝔼, Point, MultiPolygon, printelms, Ring, PolyArea, Box, GeometrySet, SubDomain, Domain
-using Meshes: measure, nvertices, nelements, paramdim, centroid, boundingbox, to, volume, element, discretize, rings, vertices, simplexify, pointify, convexhull
-using CircularArrays: CircularArrays, CircularArray
+using Meshes: nvertices, nelements, boundingbox, element, rings, vertices
 using GeoInterface
 using Tables
 using GeoJSON

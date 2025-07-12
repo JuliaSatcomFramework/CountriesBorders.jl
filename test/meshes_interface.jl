@@ -7,22 +7,6 @@
     using Test
 end
 
-@testitem "Meshes interface" setup=[InterfacesSetup] begin
-    italy = extract_countries("italy") |> only
-    @test measure(italy) == measure(to_multi(LatLon, italy))
-    @test nvertices(italy) == nvertices(to_multi(LatLon, italy))
-
-    # Cartesian defaults
-    @test convexhull(italy) == convexhull(to_multi(Cartesian, italy))
-    @test boundingbox(italy) == boundingbox(to_multi(Cartesian, italy))
-    @test centroid(italy) == centroid(to_multi(Cartesian, italy))
-    @test discretize(italy) == discretize(to_multi(Cartesian, italy))
-    @test rings(italy) == rings(to_multi(Cartesian, italy))
-    @test vertices(italy) == vertices(to_multi(Cartesian, italy))
-    @test simplexify(italy) == simplexify(to_multi(Cartesian, italy))
-    @test pointify(italy) == pointify(to_multi(Cartesian, italy))
-end
-
 @testitem "Longitude Wrapping" setup=[InterfacesSetup] begin
     russia = extract_countries("russia")
     @test all(!in(russia), [LatLon(lat, -100) for lat in -30:.01:75])

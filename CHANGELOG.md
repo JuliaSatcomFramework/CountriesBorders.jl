@@ -34,6 +34,7 @@ This is a new package which defines more consistently an interface for exploitin
 - Removed the `RegionBorders` type alias, as it is now either `GeoBasics.FastInGeometry` or `GeoBasics.VALID_DOMAINS`
 - Removed the `PlotlyBase` extension (and consequently the `scattergeo` method) as downstream packages should now rely on using the `GeoPlottingHelpers.geo_plotly_trace` function.
 - The `extract_plot_coords` function is not exported anymore (it is defined in GeoPlottingHelpers.jl)
+- Removed all the additional methods for the Mesehs.jl interface, as per new API in GeoBasics.jl
 
 ### Changed
 - The fields of the `CountryBorder` type have been changed, and now store a `GeoBasics.GeoBorders` field to represents the borders as opposed to the previous three fields `latlon`, `cart` and `bboxes`

@@ -1,7 +1,6 @@
 module GeoTablesConversion
     using CoordRefSystems: CoordRefSystems, LatLon
     using Meshes: Meshes, Geometry, Multi, Point, coords, close, GeometrySet, Ring, PolyArea
-    using CircularArrays: CircularArray
     using GeoTables: GeoTables, georef
     import Tables
     import GeoInterface as GI
