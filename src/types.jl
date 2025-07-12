@@ -1,39 +1,5 @@
-const LATLON{T} = LatLon{WGS84Latest,Deg{T}}
-const CART{T} = Cartesian2D{WGS84Latest,Met{T}}
-
-const POINT_LATLON{T} = Point{🌐, LATLON{T}}
-const POINT_CART{T} = Point{𝔼{2}, CART{T}}
-const VALID_POINT{T} = Union{POINT_LATLON{T}, POINT_CART{T}}
-
-const RING_LATLON{T} = Ring{🌐, LATLON{T}, CircularArray{POINT_LATLON{T}, 1, Vector{POINT_LATLON{T}}}}
-const RING_CART{T} = Ring{𝔼{2}, CART{T}, CircularArray{POINT_CART{T}, 1, Vector{POINT_CART{T}}}}
-const VALID_RING{T} = Union{RING_LATLON{T}, RING_CART{T}}
-
-const POLY_LATLON{T} = PolyArea{🌐, LATLON{T}, RING_LATLON{T}, Vector{RING_LATLON{T}}}
-const POLY_CART{T} = PolyArea{𝔼{2}, CART{T}, RING_CART{T}, Vector{RING_CART{T}}}
-
-const MULTI_LATLON{T} = Multi{🌐, LATLON{T}, POLY_LATLON{T}}
-const MULTI_CART{T} = Multi{𝔼{2}, CART{T}, POLY_CART{T}}
-
-const BOX_LATLON{T} = Box{🌐, LATLON{T}}
-const BOX_CART{T} = Box{𝔼{2}, CART{T}}
-
 """
-    FastInRegion{T} <: Geometry{🌐,LATLON{T}}
-
-Abstract type identifying regions where a fast custom algorithm for checking point inclusion in region is available. 
-
-Subtypes of `FastInRegion` are expected to support support the `CountriesBorders.in_exit_early` function.
-For most types, the default implementation is sufficient and translates into having a working method for the following two functions defined in CountriesBorders.jl:
-- `polyareas`
-- `bboxes`
-
-See also [`CountriesBorders.in_exit_early`](@ref), [`CountriesBorders.polyareas`](@ref), [`CountriesBorders.bboxes`](@ref).
-"""
-abstract type FastInRegion{T} <: Geometry{🌐,LATLON{T}} end
-
-"""
-    CountryBorder{T} <: Geometry{🌐,LATLON{T}}
+    CountryBorder{T} <: FastInGeometry{T}
 
 Structure representings the coordinates of the borders of a country (based on the NaturalEarth database). 
 `T` is the floating point precision of the borders coordinates, and defaults to Float32.
@@ -46,10 +12,9 @@ This structure holds the borders in both LatLon and Cartesian2D, to allow faster
 - `table_idx::Int`: The index of the country in the original GeoTable.
 - `valid_polyareas::BitVector`: The indices of skipped PolyAreas in the original MultiPolygon of the country.
 - `resolution::Int`: The resolution of the underlying border sampling from the NaturalEarth dataset.
-- `latlon::MULTI_LATLON{T}`: The borders in LatLon CRS.
-- `cart::MULTI_LATLON{T}`: The borders in Cartesian2D CRS.
+- `borders::GeoBorders{T}`: The borders of the country.
 """
-struct CountryBorder{T} <: FastInRegion{T}
+struct CountryBorder{T} <: FastInGeometry{T}
     "Name of the Country, i.e. the ADMIN entry in the GeoTable"
     admin::String
     "The index of the country in the original GeoTable"
@@ -58,20 +23,13 @@ struct CountryBorder{T} <: FastInRegion{T}
     valid_polyareas::BitVector
     "The resolution of the underlying border sampling from the NaturalEarth dataset"
     resolution::Int
-    "The borders in LatLon CRS"
-    latlon::MULTI_LATLON{T}
-    "The borders in Cartesian2D CRS"
-    cart::MULTI_CART{T}
-    "The bounding boxes of each polyarea within the country, mostly used for early filtering"
-    bboxes::Vector{BOX_CART{T}}
+    "The borders of the country"
+    borders::GeoBorders{T}
 end
 
-const GSET{T} = GeometrySet{🌐, LATLON{T}, CountryBorder{T}}
-const SUBDOMAIN{T} = SubDomain{🌐, LATLON{T}, GSET{T}}
+const GSET{T} = GeoBasics.FastInGeometrySet{T, CountryBorder{T}}
+const SUBDOMAIN{T} = GeoBasics.FastInSubDomain{T, GSET{T}}
 const DOMAIN{T} = Union{GSET{T}, SUBDOMAIN{T}}
-
-const SimpleLatLon = LatLon # To Remove in next breaking
-const RegionBorders{T} = Union{FastInRegion{T}, DOMAIN{T}}
 
 """
     SkipFromAdmin(admin::AbstractString, idxs::AbstractVector{<:Integer})
@@ -113,8 +71,5 @@ This structure holds the raw points of the coastlines at a given resolution.
 """
 struct CoastLines
     resolution::Int
-    raw_points::Vector{Vector{POINT_LATLON{Float32}}}
+    raw_points::Vector{Vector{GeoBasics.POINT_LATLON{Float32}}}
 end
-
-# Forwarding relevant meshes functions for the CountryBorder type
-const VALID_CRS = Type{<:Union{LatLon, Cartesian}}

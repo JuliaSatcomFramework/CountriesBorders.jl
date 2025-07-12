@@ -7,20 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-## [0.4.13] - 2025-06-31
+## [0.5.0] - 2025-07-12
+
+This version moved a lot of the internals to the new GeoBasics package.
+
+This is a new package which defines more consistently an interface for exploiting a fast point in region inclusion. It took many methods previously defined within this package and formalized them better in a new public API for our basic Geo needs in CountriesBorders and GeoGrids. See rest of the changelog for more details
 
 ### Added 
-- Added a new abstract type `FastInRegion` which represents all types for which our custom point inclusion algorithm (based on `in_exit_early`) should work
-  - This is mostly added to simplify defining custom regions in downstream packages without requiring to define a custom `Base.in` method for every new type.
 - Added a dependency on BasicTypes
+- Added a dependency on GeoBasics
+
+### Removed
+- The following internal functions have been removed from CountriesBorders as they are now defined in `GeoBasics` (either directly or with alternative name but similar functionality):
+  - `in_exit_early`
+  - `to_cartesian_point`
+  - `to_latlon_point`
+  - `to_cartesian_geometry`
+  - `to_latlon_geometry`
+  - `borders`: This should be replaced with `GeoBasics.to_multi` for most cases and by explicitly providing the CRS as first argument.
+  - `polyareas`: This should be replaced with `GeoBasics.polyareas(Cartesian, geom)`
+  - `bboxes`: This should be replaced with `GeoBasics.bboxes(Cartesian, geom)`
+- All the type aliases for Meshes.jl types (e.g. LATLON, POINT_LATON) have been removed from this package as they are now defined in `GeoBasics.jl`.
+- The internal `floattype` function has been removed and has been replaced with `BasicTypes.valuetype`
+- The `SimpleLatLon` type/function has been removed as it was already deprecated.
+- The `to_raw_coords` and `extract_plot_coords` have been removed as they were already deprecated since they were moved to `GeoPlottingHelpers.jl`
+- Removed the `RegionBorders` type alias, as it is now either `GeoBasics.FastInGeometry` or `GeoBasics.VALID_DOMAINS`
+- Removed the `PlotlyBase` extension (and consequently the `scattergeo` method) as downstream packages should now rely on using the `GeoPlottingHelpers.geo_plotly_trace` function.
+- The `extract_plot_coords` function is not exported anymore (it is defined in GeoPlottingHelpers.jl)
+- Removed all the additional methods for the Mesehs.jl interface, as per new API in GeoBasics.jl
 
 ### Changed
-- The internal function (`floattype`) to extract floating point type for types defined by CountriesBorders has been replaced by `BasicTypes.valuetype`
-- Make the default method for internal `to_cart_point` and `to_latlon_point` rely on `GeoPlottingHelpers.to_raw_lonlat` for simpler extension in downstream packages
-- Make internal functions relying on JuliaEarth ecosystem more consistent with the public API (we still rely on some internals)
-
-### Fixed
-- The accepted `valuetype` as input to `latlon_geometry`, `cartesian_geometry` and `change_geometry` is `<:AbstractFloat` rather than `<:Real` to be consistent with the Meshes API
+- The fields of the `CountryBorder` type have been changed, and now store a `GeoBasics.GeoBorders` field to represents the borders as opposed to the previous three fields `latlon`, `cart` and `bboxes`
+- The `CountryBorder` type is now a subtype of `GeoBasics.FastInGeometry` to satisfy the new interface
 
 ## [0.4.12] - 2025-04-02
 
@@ -80,10 +98,10 @@ This release has some breaking changes to internal functions, but as these were 
     - `latlon_geometry`
     - `cartesian_geometry`
     - `change_geometry`
-    - `to_cart_point`
+    - `to_cartesian_point`
 
 ### Added
-New internal function `to_latlon_point` which mirrors `to_cart_point` but for the output in LatLon crs.
+New internal function `to_latlon_point` which mirrors `to_cartesian_point` but for the output in LatLon crs.
 
 ## [0.4.5] - 2025-03-08
 

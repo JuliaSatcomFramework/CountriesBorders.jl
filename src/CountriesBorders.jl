@@ -1,11 +1,11 @@
 module CountriesBorders
 
 using BasicTypes: BasicTypes, valuetype
+using GeoBasics: GeoBasics, FastInGeometry, FastInDomain, GeoBorders, VALID_CRS, to_multi, geoborders, LATLON, polyareas, to_gset
 using GeoTables
 using CoordRefSystems: CoordRefSystems, LatLon, Cartesian2D, WGS84Latest, Deg, Met, Cartesian
 using Meshes: Meshes, Geometry, CRS, 🌐, Multi, 𝔼, Point, MultiPolygon, printelms, Ring, PolyArea, Box, GeometrySet, SubDomain, Domain
-using Meshes: measure, nvertices, nelements, paramdim, centroid, boundingbox, to, volume, element, discretize, rings, vertices, simplexify, pointify, convexhull
-using CircularArrays: CircularArrays, CircularArray
+using Meshes: nvertices, nelements, boundingbox, element, rings, vertices
 using GeoInterface
 using Tables
 using GeoJSON
@@ -20,7 +20,7 @@ using ScopedValues: ScopedValues, ScopedValue, with
 export LatLon, Point
 
 include("types.jl")
-export CountryBorder, SimpleLatLon, SkipFromAdmin, FastInRegion
+export CountryBorder, SkipFromAdmin
 
 # These two constants are used to customize the default resolution of the geotable with borders and coastlines
 const DEFAULT_RESOLUTION = Ref{Int}(110)
@@ -45,7 +45,6 @@ include("implementation.jl")
 export extract_countries
 
 include("plot_coordinates.jl")
-export extract_plot_coords, extract_latlon_coords
 
 include("show.jl")
 
@@ -53,7 +52,7 @@ include("show.jl")
     table = get_geotable()
     coastlines = get_coastlines()
     dmn = extract_countries("italy; spain")
-    rome = SimpleLatLon(41.9, 12.49)
+    rome = LatLon(41.9, 12.49)
     rome in dmn # Returns true
 end
 

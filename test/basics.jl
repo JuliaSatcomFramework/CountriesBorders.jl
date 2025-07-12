@@ -1,7 +1,8 @@
 @testsnippet setup_basic begin
     using CountriesBorders
-    using CountriesBorders: possible_selector_values, valid_column_names, mergeSkipDict, validate_skipDict, skipall, SkipDict, skipDict, get_geotable, extract_plot_coords, borders, remove_polyareas!, valuetype, to_cart_point, change_geometry, Cartesian, in_exit_early, polyareas, latlon_geometry, cartesian_geometry, to_latlon_point
-    using CountriesBorders.GeoTablesConversion: POINT_CART, POINT_LATLON, POLY_LATLON, POLY_CART, BOX_LATLON, BOX_CART
+    using CountriesBorders: possible_selector_values, valid_column_names, mergeSkipDict, validate_skipDict, skipall, SkipDict, skipDict, get_geotable, remove_polyareas!
+    using CountriesBorders.BasicTypes: valuetype
+    using CountriesBorders.GeoBasics: POINT_CART, POINT_LATLON, POLY_LATLON, POLY_CART, BOX_LATLON, BOX_CART, latlon_geometry, cartesian_geometry, to_latlon_point, to_cartesian_point, polyareas
     using Meshes
     using CoordRefSystems
     using Test
@@ -107,18 +108,12 @@ end
     merge!(sfa, SkipFromAdmin("France", 2), SkipFromAdmin("France", 3))
     @test sfb.idxs == sfa.idxs
 
-    @test to_cart_point(LatLon(0, 0)) isa POINT_CART{Float64}
-    poly = map([(-1,-1), (-1, 1), (1, 1), (1, -1)]) do p 
-        LatLon(p...) |> Point
-    end |> PolyArea |> change_geometry(Cartesian)
-    @test in_exit_early(LatLon(0,0), poly)
-
     # We test that 50m resolution has more polygons than the default 110m one
     @test length(get_geotable(;resolution = 50).geometry) > length(get_geotable().geometry)
     @test length(get_geotable(;resolution = 10).geometry) > length(get_geotable(;resolution = 50).geometry)
 
     italy = extract_countries("italy") |> only
-    npolyareas(x) = length(polyareas(x))
+    npolyareas(x) = length(polyareas(Cartesian, x))
     @test LatLon(41.9, 12.49) in italy
     @test npolyareas(italy) == 3
     remove_polyareas!(italy, 1)
@@ -130,13 +125,6 @@ end
     # Show methods
     @test sprint(summary, italy) == "Italy Borders"
     @test contains(sprint(show, MIME"text/plain"(), italy), ", 1 skipped")
-
-    # centroid
-    dmn = extract_countries("italy; spain")
-    c_ll = centroid(LatLon, dmn)
-    c_cart = centroid(dmn)
-    @test c_cart isa POINT_CART
-    @test centroid(dmn, 1) isa POINT_CART
 end    
 
 @testitem "Coastlines" setup=[setup_basic] begin
@@ -183,130 +171,4 @@ end
     @test resolution(get_coastlines()) == 50
 
     DEFAULT_RESOLUTION[] = 110
-end
-
-@testitem "Deprecations" setup=[setup_basic] begin
-    using CountriesBorders: extract_plot_coords, to_raw_coords
-    
-    @test_logs (:warn, r"deprecated") to_raw_coords(LatLon(10°, 10°))
-    @test_logs (:warn, r"deprecated") extract_plot_coords(LatLon(10°, 10°))
-end
-
-@testitem "Extract plot coords" setup=[setup_basic] begin
-# We test that extract_plot_coords gives first lat and then lon
-    using CountriesBorders: with_settings
-
-    dmn = extract_countries("italy")
-    @test extract_plot_coords(dmn) isa @NamedTuple{lat::Vector{Float32}, lon::Vector{Float32}}
-    ps = rand(Point, 100; crs = LatLon)
-    @test extract_plot_coords(ps) == extract_plot_coords(coords.(ps))
-
-    fr = extract_countries("France")
-    plc = extract_plot_coords(fr)
-    # France has 3 rings so it should have 2 NaN in each vector
-    f(x, n) = count(isnan, x) === n
-    @test f(plc.lat, 2) && f(plc.lon, 2)
-    @test extract_plot_coords(Float64, fr) |> eltype |> eltype === Float64
-    plc = with_settings(:INSERT_NAN => false) do
-        extract_plot_coords(fr)
-    end
-    @test f(plc.lat, 0) && f(plc.lon, 0)
-
-    # Test that cart also works
-    italy = extract_countries("italy") |> only
-    v1 = extract_plot_coords(italy) 
-    v2 = extract_plot_coords(borders(Cartesian, italy))
-    for s in (:lat, :lon)
-        a1 = getfield(v1, s)
-        a2 = getfield(v2, s)
-        f(x,y) = (isnan(x) && isnan(y)) || x == y
-        @test all(x -> f(x...), zip(a1, a2))
-    end
-
-    # We test that it also works with vector of points or vector or vectors of points
-    lls = extract_plot_coords(rand(Point, 3; crs = LatLon))
-    @test count(isnan, lls.lat) == 0
-
-    lls = extract_plot_coords([rand(Point, 3; crs = LatLon) for _ in 1:2])
-    @test count(isnan, lls.lat) == 1
-
-    lls = with_settings(:INSERT_NAN => false) do
-        extract_plot_coords([rand(Point, 3; crs = LatLon) for _ in 1:2])
-    end
-    @test count(isnan, lls.lat) == 0
-
-    # We test that the extract_plot_coords increase the number of points for very long lines
-    b = Box(
-        to_cart_point(LatLon(-30, -180)),
-        to_cart_point(LatLon(30, 180)),
-    )
-    poly = polyareas(b) |> first
-    with_settings(:PLOT_STRAIGHT_LINES => :NORMAL) do
-        plc = extract_plot_coords(poly)
-        # The +1 is because extract replicates the first point
-        @test length(plc.lat) > length(vertices(poly)) + 1
-    end
-
-    with_settings(:PLOT_STRAIGHT_LINES => :NONE) do
-        plc = extract_plot_coords(poly)
-        @test length(plc.lat) == length(vertices(poly)) + 1
-    end
-
-    # We test the copy_first_point keyword when providing directly a vector of points
-    r = rings(poly) |> first
-    vs = vertices(r)
-    @test length(extract_plot_coords(vs).lat) == length(vs)
-    with_settings(:CLOSE_VECTORS => true) do
-        @test length(extract_plot_coords(vs).lat) == length(vs) + 1
-    end
-
-    ps = [LatLon(0, -179), LatLon(0, 179)]
-    with_settings(:PLOT_STRAIGHT_LINES => :NONE) do
-        @test extract_plot_coords(ps).lon |> length == 2
-    end
-    with_settings(:PLOT_STRAIGHT_LINES => :NORMAL) do
-        @test extract_plot_coords(ps).lon |> length > 10
-    end
-    with_settings(:PLOT_STRAIGHT_LINES => :SHORT) do
-        @test extract_plot_coords(ps).lon |> length == 3 # We have three here as we just adding the antimeridian point as the distance is quite short
-    end
-    with_settings([:PLOT_STRAIGHT_LINES => :NORMAL]) do
-        @test extract_plot_coords([LatLon(89, 0), LatLon(0, 0)]).lon |> length == 2
-    end
-end
-
-@testitem "Cartesian LatLon conversion" setup=[setup_basic] begin
-
-    pa_latlon = PolyArea([Point(LatLon{WGS84Latest}(10°, -5°)), Point(LatLon{WGS84Latest}(10°, 15°)), Point(LatLon{WGS84Latest}(27°, 15°)), Point(LatLon{WGS84Latest}(27°, -5°))])
-    pa_cartesian = PolyArea([Point{𝔼{2}}(Cartesian{WGS84Latest}(-5, 10)), Point{𝔼{2}}(Cartesian{WGS84Latest}(15, 10)), Point{𝔼{2}}(Cartesian{WGS84Latest}(15, 27)), Point{𝔼{2}}(Cartesian{WGS84Latest}(-5, 27))])
-
-    multi_cartesian = Multi([pa_cartesian])
-    multi_latlon = Multi([pa_latlon])
-
-    # Test the Box conversion
-    box_latlon = Box(
-        Point(LatLon(-10°, -10°)),
-        Point(LatLon(10°, 10°))
-    )
-
-    @test box_latlon |> change_geometry(Cartesian) isa BOX_CART{Float64}
-    @test box_latlon |> change_geometry(Cartesian, Float32) |> change_geometry(LatLon) isa BOX_LATLON{Float32}
-
-    @test pa_latlon |> change_geometry(LatLon, Float32) isa POLY_LATLON{Float32}
-    @test pa_latlon |> change_geometry(Cartesian, Float32) isa POLY_CART{Float32}
-
-    @test pa_latlon |> cartesian_geometry isa POLY_CART{Float64}
-    @test pa_cartesian |> latlon_geometry isa POLY_LATLON{Float64}
-
-    @test pa_latlon |> change_geometry(Cartesian) |> change_geometry(LatLon) == pa_latlon
-    @test pa_latlon |> change_geometry(LatLon) == pa_latlon
-    @test pa_cartesian |> change_geometry(LatLon) |> change_geometry(Cartesian) == pa_cartesian
-    @test pa_cartesian |> change_geometry(LatLon) == pa_latlon
-    @test pa_cartesian |> change_geometry(Cartesian) == pa_cartesian
-    @test pa_latlon |> change_geometry(Cartesian) == pa_cartesian
-
-    @test multi_cartesian |> change_geometry(LatLon) == multi_latlon
-    @test multi_latlon |> change_geometry(Cartesian) == multi_cartesian
-
-    @test rand(LatLon) |> to_latlon_point isa POINT_LATLON{Float64}
 end

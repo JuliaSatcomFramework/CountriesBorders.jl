@@ -1,25 +1,10 @@
 @testsnippet InterfacesSetup begin
     using Meshes
     using CountriesBorders
-    using CountriesBorders: borders, bboxes, polyareas, valuetype, to_cart_point
+    using CountriesBorders.GeoBasics: to_multi, bboxes, polyareas, to_cartesian_point
+    using CountriesBorders.BasicTypes: valuetype
     using CoordRefSystems
     using Test
-end
-
-@testitem "Meshes interface" setup=[InterfacesSetup] begin
-    italy = extract_countries("italy") |> only
-    @test measure(italy) == measure(borders(LatLon, italy))
-    @test nvertices(italy) == nvertices(borders(LatLon, italy))
-
-    # Cartesian defaults
-    @test convexhull(italy) == convexhull(borders(Cartesian, italy))
-    @test boundingbox(italy) == boundingbox(borders(Cartesian, italy))
-    @test centroid(italy) == centroid(borders(Cartesian, italy))
-    @test discretize(italy) == discretize(borders(Cartesian, italy))
-    @test rings(italy) == rings(borders(Cartesian, italy))
-    @test vertices(italy) == vertices(borders(Cartesian, italy))
-    @test simplexify(italy) == simplexify(borders(Cartesian, italy))
-    @test pointify(italy) == pointify(borders(Cartesian, italy))
 end
 
 @testitem "Longitude Wrapping" setup=[InterfacesSetup] begin
@@ -28,10 +13,12 @@ end
 end
 
 @testitem "in_exit_early" setup=[InterfacesSetup] begin
-    using CountriesBorders: in_exit_early, Cartesian, borders, DOMAIN, to_cart_point
+    using CountriesBorders: DOMAIN
+    using CountriesBorders.GeoBasics: in_exit_early, to_multi, to_cartesian_point
+    using CoordRefSystems: CoordRefSystems, Cartesian
     dmn = extract_countries("*")
     # Add consistency checks with the standard `in` method not doing exit early
-    _in(p, cb::CountryBorder) = in(to_cart_point(valuetype(cb), p), borders(Cartesian, cb))
+    _in(p, cb::CountryBorder) = in(to_cartesian_point(valuetype(cb), p), to_multi(Cartesian, cb))
     _in(p, dm::DOMAIN) = any(_in(p, e) for e in dm)
 
     @test all(1:100) do _
@@ -39,30 +26,3 @@ end
         _in(p, dmn) == in(p, dmn)
     end
 end
-
-@testitem "polyareas and bboxes" setup=[InterfacesSetup] begin
-    dmn = extract_countries(;continent = "Europe")
-    @test collect(bboxes(dmn)) == bboxes(collect(polyareas(dmn)))
-
-    b = Box(
-        to_cart_point(LatLon(-30, -180)),
-        to_cart_point(LatLon(30, 180)),
-    )
-    @test bboxes(b) |> first === b
-end
-
-@testitem "valuetype" setup=[InterfacesSetup] begin
-    dmn = extract_countries(;continent = "Europe")
-    cb = element(dmn, 1)
-    brdlat = borders(LatLon, cb)
-    brdcart = borders(Cartesian, cb)
-    p = rand(Point; crs = LatLon)
-    ll = rand(LatLon)
-    @test all((dmn, cb, brdlat, brdcart)) do el
-        valuetype(el) == Float32
-    end
-    @test all((p, ll)) do el
-        valuetype(el) == Float64
-    end
-end
-
