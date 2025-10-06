@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.5.2] - 2025-10-06
+### Changed
+- Bumped the compat of CoordRefSystems.jl to support v0.19
+- Bumped the compat of Meshes.jl to support v0.55
+
 ## [0.5.1] - 2025-08-21
 
 ### Changed
