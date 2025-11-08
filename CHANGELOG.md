@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.5.3] - 2025-11-08
+
+### Fixed
+- Fixed a supertype not correctly working due to changes in Meshes.jl v0.55.2, leading to errors in tests and in the `resolution` method.
+
 ## [0.5.2] - 2025-10-06
 ### Changed
 - Bumped the compat of CoordRefSystems.jl to support v0.19
