@@ -27,7 +27,11 @@ struct CountryBorder{T} <: FastInGeometry{T}
     borders::GeoBorders{T}
 end
 
-const GSET{T} = GeoBasics.FastInGeometrySet{T, CountryBorder{T}}
+const GSET{T} = @static if pkgversion(Meshes) < v"0.55.2" 
+    GeoBasics.FastInGeometrySet{T, CountryBorder{T}} 
+else 
+    GeoBasics.FastInGeometrySet{T, CountryBorder{T}}{Vector{CountryBorder{T}}} 
+end
 const SUBDOMAIN{T} = GeoBasics.FastInSubDomain{T, GSET{T}}
 const DOMAIN{T} = Union{GSET{T}, SUBDOMAIN{T}}
 
